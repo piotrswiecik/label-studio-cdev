@@ -1,0 +1,11 @@
+services:
+  ls.dev.db:
+    image: postgres:18-trixie
+    container_name: ls.dev.db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
