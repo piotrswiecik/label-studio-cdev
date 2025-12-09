@@ -3,6 +3,9 @@
 import logging
 from urllib.parse import quote
 
+from azure.core.pipeline.transport import HttpResponse
+from django.http import HttpResponseForbidden
+
 from core.feature_flags import flag_set
 from core.middleware import enforce_csrf_checks
 from core.utils.common import load_func
@@ -26,7 +29,9 @@ logger = logging.getLogger()
 def user_activate(request, token):
     """Admin activation endpoint for newly signed up users"""
     from users.models import SignUpActivationToken # avoid circular import
-    logger.info(f'Activating user {request.user.username}')
+
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
 
     try:
         db_token = SignUpActivationToken.objects.filter(token=token).first()
