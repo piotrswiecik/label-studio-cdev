@@ -22,6 +22,26 @@ logger = logging.getLogger()
 
 
 @login_required
+def user_activate(request, token):
+    """Admin activation endpoint for newly signed up users"""
+    from users.models import SignUpActivationToken # avoid circular import
+    logger.info(f'Activating user {request.user.username}')
+
+    try:
+        db_token = SignUpActivationToken.objects.filter(token=token).first()
+        if db_token.is_valid():
+            db_token.user.is_active = True
+            db_token.user.save()
+            db_token.used = True
+            db_token.save()
+            return render(request, "users/admin/user_activated.html")
+    except SignUpActivationToken.DoesNotExist:
+        pass
+
+    return render(request, "user/admin/user_activation_failed.html")
+
+
+@login_required
 def logout(request):
     auth.logout(request)
 

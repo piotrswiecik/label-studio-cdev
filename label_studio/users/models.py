@@ -1,6 +1,8 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
 import datetime
+import uuid
+
 from typing import Optional
 
 from core.feature_flags import flag_set
@@ -245,3 +247,21 @@ def init_user(sender, instance=None, created=False, **kwargs):
     if created:
         # create token for user
         Token.objects.create(user=instance)
+
+
+class SignUpActivationToken(models.Model):
+    """Model for storing sign up activation tokens on initial user registration."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        # expires after 24h
+        expiry_time = self.created_at + datetime.timedelta(hours=24)
+        return not self.used and timezone.now() < expiry_time
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['token']),
+        ]

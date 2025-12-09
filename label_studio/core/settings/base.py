@@ -556,6 +556,12 @@ TASK_API_PAGE_SIZE_MAX = int(get_env('TASK_API_PAGE_SIZE_MAX', 0)) or None
 # Email backend
 FROM_EMAIL = get_env('FROM_EMAIL', 'Label Studio <hello@labelstud.io>')
 EMAIL_BACKEND = get_env('EMAIL_BACKEND', 'django.core.mail.backends.dummy.EmailBackend')
+EMAIL_HOST = get_env('EMAIL_HOST', 'localhost')
+EMAIL_PORT = get_env('EMAIL_PORT', 25)
+EMAIL_HOST_USER = get_env('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_env('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = get_bool_env('EMAIL_USE_TLS', False)
+USER_SIGNUP_ADMIN_EMAILS = get_env_list('USER_SIGNUP_ADMIN_EMAILS', default=[])
 
 ENABLE_LOCAL_FILES_STORAGE = get_bool_env('ENABLE_LOCAL_FILES_STORAGE', default=True)
 LOCAL_FILES_SERVING_ENABLED = get_bool_env('LOCAL_FILES_SERVING_ENABLED', default=False)

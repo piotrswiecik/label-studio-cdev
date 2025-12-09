@@ -6,12 +6,15 @@ from time import time
 
 from core.utils.common import load_func
 from django import forms
-from django.conf import settings
 from django.contrib import auth
 from django.core.files.images import get_image_dimensions
 from django.shortcuts import redirect
-from django.urls import reverse
 from organizations.models import Organization
+from django.conf import settings
+
+from django.urls import reverse
+
+from users.utils import send_admin_signup_notification, send_user_signup_notification
 
 
 def hash_upload(instance, filename):
@@ -90,10 +93,18 @@ def proceed_registration(request, user_form, organization_form, next_page):
     save_user = load_func(settings.SAVE_USER)
     response = save_user(request, next_page, user_form)
 
-    # TODO: send notification to admin
+    # send approval notification to admin
+    send_admin_signup_notification(request)
+
+    # send pending registration email to new user
+    send_user_signup_notification(request.user)
+
     return response
 
 
 def login(request, *args, **kwargs):
     request.session['last_login'] = time()
     return auth.login(request, *args, **kwargs)
+
+
+
