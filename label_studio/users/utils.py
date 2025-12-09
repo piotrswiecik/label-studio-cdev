@@ -36,7 +36,11 @@ def send_admin_signup_notification(request):
     )
 
     email.attach_alternative(html_content, "text/html")
-    email.send()
+    try:
+        email.send()
+    except Exception as e:
+        # TODO: retry or trigger warning
+        pass
 
 
 def send_user_signup_notification(request):
@@ -64,3 +68,26 @@ def send_user_signup_notification(request):
         pass
 
 
+def send_user_account_activated(user):
+    """Send email to user with account activation info"""
+    html_content = render_to_string(
+        "users/admin/activation_email_user.html",
+        {"email": user.email}
+    )
+
+    fallback_text_content = strip_tags(html_content)
+
+    email = EmailMultiAlternatives(
+        'Status aktywacji konta w Coronary.AI Studio',
+        fallback_text_content,
+        settings.FROM_EMAIL,
+        [user.email]
+    )
+
+    email.attach_alternative(html_content, "text/html")
+
+    try:
+        email.send()
+    except Exception as e:
+        # TODO: add retry / rollback
+        pass

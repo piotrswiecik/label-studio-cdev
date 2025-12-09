@@ -17,6 +17,7 @@ from organizations.models import Organization
 from rest_framework.authtoken.models import Token
 from users import forms
 from users.functions import login, proceed_registration
+from users.utils import send_user_account_activated
 
 logger = logging.getLogger()
 
@@ -34,6 +35,7 @@ def user_activate(request, token):
             db_token.user.save()
             db_token.used = True
             db_token.save()
+            send_user_account_activated(request.user)
             return render(request, "users/admin/user_activated.html")
     except SignUpActivationToken.DoesNotExist:
         pass
