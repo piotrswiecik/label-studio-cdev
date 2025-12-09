@@ -76,11 +76,7 @@ def save_user(request, next_page, user_form):
         'allow_newsletters': user.allow_newsletters,
         'update-notifications': 1,
         'new-user': 1,
-        'how_find_us': user_form.cleaned_data.get('how_find_us', ''), # TODO: Remove this field
     }
-    # TODO: remove this feature
-    if user_form.cleaned_data.get('how_find_us', '') == 'Other':
-        request.advanced_json['elaborate'] = user_form.cleaned_data.get('elaborate', '')
 
     # TODO: redirect to other landing page, don't auto-login
     redirect_url = next_page if next_page else reverse('projects:project-index')
@@ -94,6 +90,7 @@ def proceed_registration(request, user_form, organization_form, next_page):
     save_user = load_func(settings.SAVE_USER)
     response = save_user(request, next_page, user_form)
 
+    # TODO: send notification to admin
     return response
 
 

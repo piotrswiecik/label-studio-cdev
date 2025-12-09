@@ -43,6 +43,7 @@ def user_signup(request):
     next_page = request.GET.get('next')
     token = request.GET.get('token')
 
+    # TODO: always redirect to landing page on signup
     # checks if the URL is a safe redirection.
     if not next_page or not url_has_allowed_host_and_scheme(url=next_page, allowed_hosts=request.get_host()):
         if flag_set('fflag_all_feat_dia_1777_ls_homepage_short', user):
@@ -68,6 +69,11 @@ def user_signup(request):
 
         user_form = forms.UserSignupForm(request.POST)
         organization_form = OrganizationSignupForm(request.POST)
+
+        # Disable marketing content
+        user_form.allowed_domains = False
+        user_form.how_find_us = ""
+        user_form.elaborate = ""
 
         if user_form.is_valid():
             redirect_response = proceed_registration(request, user_form, organization_form, next_page)
