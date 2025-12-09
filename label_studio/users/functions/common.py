@@ -97,7 +97,7 @@ def proceed_registration(request, user_form, organization_form, next_page):
     send_admin_signup_notification(request)
 
     # send pending registration email to new user
-    send_user_signup_notification(request.user)
+    send_user_signup_notification(request)
 
     return response
 

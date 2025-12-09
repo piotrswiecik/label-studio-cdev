@@ -39,8 +39,28 @@ def send_admin_signup_notification(request):
     email.send()
 
 
-def send_user_signup_notification(user):
+def send_user_signup_notification(request):
     """Send email to user with pending approval info"""
-    ...
+    html_content = render_to_string(
+        "users/admin/signup_notification_email_user.html",
+        {}
+    )
+
+    fallback_text_content = strip_tags(html_content)
+
+    email = EmailMultiAlternatives(
+        'Status aktywacji konta w Coronary.AI Studio',
+        fallback_text_content,
+        settings.FROM_EMAIL,
+        [request.user.email]
+    )
+
+    email.attach_alternative(html_content, "text/html")
+
+    try:
+        email.send()
+    except Exception as e:
+        # TODO: add retry / rollback
+        pass
 
 
