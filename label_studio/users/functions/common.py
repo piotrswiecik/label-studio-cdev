@@ -61,24 +61,28 @@ def save_user(request, next_page, user_form):
     user.username = user.email.split('@')[0]
     user.save()
 
+    # TODO: refactor default organization logic
     if Organization.objects.exists():
         org = Organization.objects.first()
         org.add_user(user)
     else:
         org = Organization.create_organization(created_by=user, title='Label Studio')
     user.active_organization = org
-    user.save(update_fields=['active_organization'])
+    user.is_active = False # New user requires admin approval
+    user.save(update_fields=['active_organization', 'is_active'])
 
     request.advanced_json = {
         'email': user.email,
         'allow_newsletters': user.allow_newsletters,
         'update-notifications': 1,
         'new-user': 1,
-        'how_find_us': user_form.cleaned_data.get('how_find_us', ''),
+        'how_find_us': user_form.cleaned_data.get('how_find_us', ''), # TODO: Remove this field
     }
+    # TODO: remove this feature
     if user_form.cleaned_data.get('how_find_us', '') == 'Other':
         request.advanced_json['elaborate'] = user_form.cleaned_data.get('elaborate', '')
 
+    # TODO: redirect to other landing page, don't auto-login
     redirect_url = next_page if next_page else reverse('projects:project-index')
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(redirect_url)
