@@ -60,6 +60,8 @@ class AllPermissions(BaseModel):
     views_change: str = 'views.change'
     views_delete: str = 'views.delete'
 
+    danger_zone_access: str = 'danger_zone.access'
+
 
 all_permissions = AllPermissions()
 
@@ -70,6 +72,13 @@ class ViewClassPermission(BaseModel):
     PUT: Optional[str] = None
     DELETE: Optional[str] = None
     POST: Optional[str] = None
+
+@rules.predicate
+def is_staff_or_superuser(user):
+    """Check if user belongs to core development team"""
+    if not user.is_authenticated:
+        return False
+    return user.is_staff or user.is_superuser
 
 
 def make_perm(name, pred, overwrite=False):
@@ -83,3 +92,6 @@ def make_perm(name, pred, overwrite=False):
 
 for _, permission_name in all_permissions:
     make_perm(permission_name, rules.is_authenticated)
+
+# override permissions for project danger zone
+make_perm(all_permissions.danger_zone_access, is_staff_or_superuser, overwrite=True)

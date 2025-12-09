@@ -8,8 +8,10 @@ import { MachineLearningSettings } from "./MachineLearningSettings/MachineLearni
 import { PredictionsSettings } from "./PredictionsSettings/PredictionsSettings";
 import { StorageSettings } from "./StorageSettings/StorageSettings";
 import "./settings.scss";
+import {ABILITY, useAuth} from "@humansignal/core/providers/AuthProvider";
 
 export const MenuLayout = ({ children, ...routeProps }) => {
+  const { permissions } = useAuth();
   return (
     <SidebarMenu
       menuItems={[
@@ -20,7 +22,7 @@ export const MenuLayout = ({ children, ...routeProps }) => {
         PredictionsSettings,
         StorageSettings,
         WebhookPage,
-        DangerZone,
+        permissions.can(ABILITY.can_access_danger_zone) && DangerZone,
       ].filter(Boolean)}
       path={routeProps.match.url}
       children={children}

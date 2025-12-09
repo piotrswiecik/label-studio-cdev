@@ -19,6 +19,9 @@ export enum ABILITY {
   can_view_storage = "storages.view",
   can_manage_storage = "storages.change",
   can_sync_storage = "storages.sync",
+
+  // Project Danger Zone
+  can_access_danger_zone = "danger_zone.access",
 }
 
 export type Ability = ABILITY;
