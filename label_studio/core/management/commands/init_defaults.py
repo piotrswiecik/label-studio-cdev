@@ -50,7 +50,7 @@ class Command(BaseCommand):
         user_data["is_staff"] = True
         user_data["is_superuser"] = True
 
-        user = self.user_model.objects.create(**user_data)
+        user = self.user_model.objects.create_user(**user_data) # noqa
         self.stdout.write(
             self.style.SUCCESS(f'Administrator {username} created successfully.')
         )
