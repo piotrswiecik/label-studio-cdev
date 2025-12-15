@@ -358,7 +358,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     purge_at = models.DateTimeField(_('purge at'), null=True, blank=True)
 
     # Tagging functionality added in CRAI-109
-    tags = models.ManyToManyField(ProjectTag, blank=True, related_name='projects')
+    project_tags = models.ManyToManyField(ProjectTag, blank=True, related_name='projects')
 
     def __init__(self, *args, **kwargs):
         super(Project, self).__init__(*args, **kwargs)

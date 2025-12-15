@@ -100,6 +100,8 @@ class ProjectSerializer(FlexFieldsModelSerializer):
     queue_done = serializers.SerializerMethodField()
     state = FSMStateField(read_only=True)  # FSM state - automatically uses annotation if present
 
+    project_tags = serializers.StringRelatedField(many=True, read_only=True)
+
     @property
     def user_id(self):
         try:
@@ -252,6 +254,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'queue_done',
             'config_suitable_for_bulk_annotation',
             'state',
+            'project_tags'
         ]
 
     def validate_label_config(self, value):
