@@ -159,6 +159,13 @@ ProjectMixin = load_func(settings.PROJECT_MIXIN)
 recalculate_all_stats = load_func(settings.RECALCULATE_ALL_STATS)
 
 
+class ProjectTag(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
 class Project(ProjectMixin, FsmHistoryStateModel):
     class SkipQueue(models.TextChoices):
         # requeue to the end of the same annotator’s queue => annotator gets this task at the end of the queue
@@ -349,6 +356,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         verbose_name=_('deleted by'),
     )
     purge_at = models.DateTimeField(_('purge at'), null=True, blank=True)
+
+    # Tagging functionality added in CRAI-109
+    tags = models.ManyToManyField(ProjectTag, blank=True, related_name='projects')
 
     def __init__(self, *args, **kwargs):
         super(Project, self).__init__(*args, **kwargs)
