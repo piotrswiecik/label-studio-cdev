@@ -139,6 +139,13 @@ const ProjectCard = ({ project }) => {
           </div>
         </div>
         <div className={cn("project-card").elem("description").toClassName()}>{project.description}</div>
+        <div className={cn("project-card").elem("tags").toClassName()}>
+          {project.project_tags && project.project_tags.map((tag) => (
+            <div className={cn("project-card").elem("tag").toClassName()} key={tag}>
+              {tag}
+            </div>
+          ))}
+        </div>
         <div className={cn("project-card").elem("info").toClassName()}>
           <div className={cn("project-card").elem("created-date").toClassName()}>
             {format(new Date(project.created_at), "dd MMM 'yy, HH:mm")}

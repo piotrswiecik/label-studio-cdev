@@ -79,6 +79,7 @@ export const ProjectsPage = () => {
             "total_predictions_number",
             "ground_truth_number",
             "finished_task_number",
+            "project_tags"
           ].join(","),
           page_size: pageSize,
         },

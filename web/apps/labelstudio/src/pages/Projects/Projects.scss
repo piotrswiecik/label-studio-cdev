@@ -213,6 +213,15 @@
     -webkit-box-orient: vertical;
   }
 
+  &__tags {
+    display: flex;
+    flex-direction: row;
+  }
+
+  &__tag {
+    color: red;
+  }
+
   &__info {
     display: flex;
     align-items: center;
