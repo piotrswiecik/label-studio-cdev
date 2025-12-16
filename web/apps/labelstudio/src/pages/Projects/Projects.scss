@@ -216,10 +216,24 @@
   &__tags {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: 12px;
+    margin-right: 12px;
+    margin-top: 12px;
   }
 
   &__tag {
-    color: red;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    background-color: var(--color-neutral-surface);
+    border: 1px solid var(--color-neutral-border);
+    color: var(--color-neutral-content-subtle);
+    border-radius: 9999px;
+    padding: 4px 10px;
+    line-height: 1;
+    white-space: nowrap;
+    font-weight: 500;
   }
 
   &__info {
