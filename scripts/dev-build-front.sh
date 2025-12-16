@@ -17,7 +17,9 @@ export POSTGRE_PORT=${POSTGRE_PORT:-5432}
 
 echo "Using DB: $DJANGO_DB host=$POSTGRE_HOST port=$POSTGRE_PORT name=$POSTGRE_NAME user=$POSTGRE_USER"
 
-echo "Running migrations..."
-python label_studio/manage.py migrate
+echo "Rebuilding client app..."
+cd web && yarn build
+
+cd .. && python label_studio/manage.py collectstatic --noinput
 
 echo "Done."
