@@ -1,7 +1,9 @@
 import {ProjectContext, useProject} from "../../../providers/ProjectProvider";
 import {createTitleFromSegments, useAPI, useUpdatePageTitle} from "@humansignal/core";
-import {useContext, useState} from "react";
+import {useCallback, useContext, useState} from "react";
 import {cn} from "../../../utils/bem";
+import { Form, Input, TextArea } from "../../../components/Form";
+import {Button} from "@humansignal/ui";
 
 export const ProjectTagSettings = () => {
   const { project, fetchProject } = useContext(ProjectContext);
@@ -10,7 +12,8 @@ export const ProjectTagSettings = () => {
 
   useUpdatePageTitle(createTitleFromSegments([project?.title, "Project Tags"]));
 
-  const tags = project.project_tags;
+  const addTag = useCallback(() => {
+  }, []);
 
   return (
   <div>
@@ -31,6 +34,19 @@ export const ProjectTagSettings = () => {
           </div>
         ))}
       </div>
+      <Form action="addTag" formData={{ ...project }} params={{ pk: project.id }} onSubmit={addTag}>
+        <Form.Row columnCount={1} rowGap="16px">
+              <Input name="tag" label="Add New Tag" />
+        </Form.Row>
+        <Form.Actions>
+          <Form.Indicator>
+            <span case="success">Saved!</span>
+          </Form.Indicator>
+          <Button type="submit" className="w-[150px]" aria-label="Save Tag">
+            Save
+          </Button>
+        </Form.Actions>
+      </Form>
     </div>
   </div>
 );
