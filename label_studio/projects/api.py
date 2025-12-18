@@ -941,4 +941,12 @@ def register_project_tag(request, pk):
 # TODO authorization
 @api_view(["DELETE"])
 def remove_project_tag(request, pk, tag_name):
-    return Response({"message": "ok"}, status=status.HTTP_200_OK)
+    try:
+        project = Project.all_objects.get(pk=pk)
+        tag = ProjectTag.objects.get(name=tag_name)
+        project.project_tags.remove(tag)
+        return Response({"message": "tag removed"}, status=status.HTTP_200_OK)
+    except Project.DoesNotExist:
+        return Response({"message": "project not found"}, status=status.HTTP_404_NOT_FOUND)
+    except ProjectTag.DoesNotExist:
+        return Response({"message": "tag not found"}, status=status.HTTP_404_NOT_FOUND)
