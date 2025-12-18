@@ -9,6 +9,7 @@ import { PredictionsSettings } from "./PredictionsSettings/PredictionsSettings";
 import { StorageSettings } from "./StorageSettings/StorageSettings";
 import "./settings.scss";
 import {ABILITY, useAuth} from "@humansignal/core/providers/AuthProvider";
+import {ProjectTagSettings} from "./ProjectTagSettings/ProjectTagSettings";
 
 export const MenuLayout = ({ children, ...routeProps }) => {
   const { permissions } = useAuth();
@@ -17,6 +18,7 @@ export const MenuLayout = ({ children, ...routeProps }) => {
       menuItems={[
         GeneralSettings,
         LabelingSettings,
+        ProjectTagSettings,
         AnnotationSettings,
         MachineLearningSettings,
         PredictionsSettings,
@@ -33,6 +35,7 @@ export const MenuLayout = ({ children, ...routeProps }) => {
 const pages = {
   AnnotationSettings,
   LabelingSettings,
+  ProjectTagSettings,
   MachineLearningSettings,
   PredictionsSettings,
   StorageSettings,
