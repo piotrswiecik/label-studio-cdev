@@ -175,6 +175,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         # ignore skipped tasks => skip is a valid annotation, task is completed (finished=True)
         IGNORE_SKIPPED = 'IGNORE_SKIPPED', 'Ignore skipped'
 
+    # CRAI-109 limiting maximum number of tags per project
+    MAXIMUM_TAG_COUNT = 5
+
     # Managers: default (visible only) and explicit unfiltered
     objects = ProjectVisibleManager()
     all_objects = ProjectManager()

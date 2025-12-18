@@ -19,7 +19,7 @@ from core.utils.io import find_dir, find_file, read_yaml
 from core.utils.serializer_to_openapi_params import serializer_to_openapi_params
 from data_manager.functions import filters_ordering_selected_items_exist, get_prepared_queryset
 from django.conf import settings
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.http import Http404
 from django.utils.decorators import method_decorator
@@ -32,7 +32,7 @@ from ml.serializers import MLBackendSerializer
 from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
-from projects.models import Project, ProjectImport, ProjectManager, ProjectReimport, ProjectSummary
+from projects.models import Project, ProjectImport, ProjectManager, ProjectReimport, ProjectSummary, ProjectTag
 from projects.serializers import (
     GetFieldsSerializer,
     ProjectCountsSerializer,
@@ -917,7 +917,25 @@ class ProjectAnnotatorsAPI(generics.RetrieveAPIView):
 # TODO authorization
 @api_view(["POST"])
 def register_project_tag(request, pk):
-    return Response({"message": "ok"}, status=status.HTTP_200_OK)
+    try:
+        # Bypassing the custom manager
+        project = Project.all_objects.get(pk=pk)
+
+        if project.project_tags.count() >= Project.MAXIMUM_TAG_COUNT:
+            return Response({"message": "project already has maximum number of tags"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        new_tag = request.data.get("tag")
+        if not new_tag or new_tag.strip() == "":
+            return Response({"message": "tag value is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            tag, created = ProjectTag.objects.get_or_create(name=new_tag.strip())
+            project.project_tags.add(tag)
+
+        return Response({"message": "tag added successfully"}, status=status.HTTP_200_OK)
+    except Project.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 # TODO authorization
