@@ -1,6 +1,6 @@
 import chr from "chroma-js";
 import { format } from "date-fns";
-import { useMemo } from "react";
+import {useMemo, useState} from "react";
 import { NavLink } from "react-router-dom";
 import { IconCheck, IconEllipsis, IconMinus, IconSparks } from "@humansignal/icons";
 import { Userpic, Button, Dropdown, Tooltip } from "@humansignal/ui";
@@ -11,11 +11,78 @@ import { ProjectStateChip } from "@humansignal/app-common";
 
 const DEFAULT_CARD_COLORS = ["#FFFFFF", "#FDFDFC"];
 
+const TagFilterBar = ({ allTags, selectedTags, onTagToggle, onClearAll }) => {
+  if (allTags.length === 0) return null;
+
+  return (
+    <div className={cn("projects-page").elem("tag-filter").toClassName()}>
+      <span className={cn("projects-page").elem("tag-filter-label").toClassName()}>
+        Filter by tags:
+      </span>
+      <div className={cn("projects-page").elem("tag-filter-list").toClassName()}>
+        {allTags.map((tag) => (
+          <button
+            key={tag}
+            className={cn("projects-page")
+              .elem("tag-filter-item")
+              .mod({ active: selectedTags.includes(tag) })
+              .toClassName()}
+            onClick={() => onTagToggle(tag)}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+      {selectedTags.length > 0 && (
+        <button
+          className={cn("projects-page").elem("tag-filter-clear").toClassName()}
+          onClick={onClearAll}
+        >
+          Clear all
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, pageSize }) => {
+  const [selectedTags, setSelectedTags] = useState([]);
+
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    projects.forEach((project) => {
+      project.project_tags?.forEach((tag) => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    if (selectedTags.length === 0) return projects;
+    return projects.filter((project) =>
+      selectedTags.every((tag) => project.project_tags?.includes(tag))
+    );
+  }, [projects, selectedTags]);
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleClearAll = () => {
+    setSelectedTags([]);
+  };
+
   return (
     <>
+      <TagFilterBar
+        allTags={allTags}
+        selectedTags={selectedTags}
+        onTagToggle={handleTagToggle}
+        onClearAll={handleClearAll}
+      />
       <div className={cn("projects-page").elem("list").toClassName()}>
-        {projects.map((project) => (
+        {filteredProjects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
       </div>
@@ -52,7 +119,7 @@ export const EmptyProjectsList = ({ openModal }) => {
   );
 };
 
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, onTagClick }) => {
   const color = useMemo(() => {
     return DEFAULT_CARD_COLORS.includes(project.color) ? null : project.color;
   }, [project]);
@@ -140,10 +207,19 @@ const ProjectCard = ({ project }) => {
         </div>
         <div className={cn("project-card").elem("description").toClassName()}>{project.description}</div>
         <div className={cn("project-card").elem("tags").toClassName()}>
+          {/* CHANGED: Made tags clickable */}
           {project.project_tags && project.project_tags.map((tag) => (
-            <div className={cn("project-card").elem("tag").toClassName()} key={tag}>
+            <button
+              className={cn("project-card").elem("tag").toClassName()}
+              key={tag}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTagClick?.(tag);
+              }}
+            >
               {tag}
-            </div>
+            </button>
           ))}
         </div>
         <div className={cn("project-card").elem("info").toClassName()}>

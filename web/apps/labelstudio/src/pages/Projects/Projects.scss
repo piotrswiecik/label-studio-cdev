@@ -1,6 +1,59 @@
 .projects-page {
   min-height: calc(100vh - var(--header-height));
 
+  &__tag-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 40px;
+    flex-wrap: wrap;
+  }
+
+  &__tag-filter-label {
+    font-weight: 500;
+    color: var(--color-neutral-content-subtle);
+  }
+
+  &__tag-filter-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__tag-filter-item {
+    font-size: 0.875rem;
+    background-color: var(--color-neutral-surface);
+    border: 1px solid var(--color-neutral-border);
+    color: var(--color-neutral-content-subtle);
+    border-radius: 9999px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: var(--color-primary-border);
+    }
+
+    &--active {
+      background-color: var(--color-primary-surface);
+      border-color: var(--color-primary-border);
+      color: var(--color-primary-content);
+    }
+  }
+
+  &__tag-filter-clear {
+    font-size: 0.875rem;
+    background: none;
+    border: none;
+    color: var(--color-danger-content, #dc2626);
+    cursor: pointer;
+    padding: 4px 8px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   &__loading {
     width: 100%;
     height: 100%;
