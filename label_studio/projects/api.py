@@ -4,6 +4,8 @@ import logging
 import os
 import pathlib
 
+from rest_framework.decorators import api_view
+
 from core.feature_flags import flag_set
 from core.filters import ListFilter
 from core.label_config import config_essential_data_has_changed
@@ -910,3 +912,9 @@ class ProjectAnnotatorsAPI(generics.RetrieveAPIView):
         users = User.objects.filter(id__in=annotator_ids).prefetch_related('om_through').order_by('id')
         data = UserSimpleSerializer(users, many=True, context={'request': request}).data
         return Response(data)
+
+
+# TODO authorization
+@api_view(["POST", "DELETE"])
+def project_tags(request, pk):
+    return Response({"message": "ok"}, status=status.HTTP_200_OK)

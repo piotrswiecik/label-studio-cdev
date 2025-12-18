@@ -47,6 +47,8 @@ _api_urlpatterns = [
     path('<int:pk>/model-versions/', api.ProjectModelVersions.as_view(), name='project-model-versions'),
     # List all annotators for project
     path('<int:pk>/annotators/', api.ProjectAnnotatorsAPI.as_view(), name='project-annotators'),
+    # CRAI-109 Update project tags
+    path('<int:pk>/tags/', api.project_tags, name='add-project-tags'),
 ]
 
 _api_urlpatterns_templates = [
