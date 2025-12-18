@@ -915,6 +915,12 @@ class ProjectAnnotatorsAPI(generics.RetrieveAPIView):
 
 
 # TODO authorization
-@api_view(["POST", "DELETE"])
-def project_tags(request, pk):
+@api_view(["POST"])
+def register_project_tag(request, pk):
+    return Response({"message": "ok"}, status=status.HTTP_200_OK)
+
+
+# TODO authorization
+@api_view(["DELETE"])
+def remove_project_tag(request, pk, tag_name):
     return Response({"message": "ok"}, status=status.HTTP_200_OK)
