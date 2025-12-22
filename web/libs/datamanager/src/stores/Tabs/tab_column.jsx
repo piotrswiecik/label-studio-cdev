@@ -138,7 +138,9 @@ export const TabColumn = types
     get currentType() {
       const displayType = self.parentView?.columnsDisplayType?.get(self.id);
 
-      return displayType ?? self.type;
+      if (displayType !== undefined && displayType !== null) return displayType;
+      if (self.type === "Image") return "Text";
+      return self.type;
     },
 
     get asField() {
