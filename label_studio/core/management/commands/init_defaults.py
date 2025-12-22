@@ -4,6 +4,7 @@ from django.core.management import BaseCommand, CommandError
 from django.conf import settings
 
 from core.utils.common import load_func
+from organizations.models import Organization
 
 EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
@@ -51,15 +52,18 @@ class Command(BaseCommand):
         user_data["is_superuser"] = True
 
         user = self.user_model.objects.create_user(**user_data) # noqa
-        self.stdout.write(
-            self.style.SUCCESS(f'Administrator {username} created successfully.')
-        )
+        self.stdout.write(self.style.SUCCESS(f'Administrator {username} created successfully.'))
 
-        org_staff = org_fn('staff', created_by=user)
+        org = Organization.objects.first()
+        if not org:
+            org = org_fn(title='Label Studio', created_by=user)
+            self.stdout.write(self.style.SUCCESS('Staff organization created successfully.'))
+        else:
+            org.add_user(user)
 
-        self.stdout.write(
-            self.style.SUCCESS(f'Staff organization created successfully.')
-        )
+        user.active_organization = org
+        user.save(update_fields=['active_organization'])
+
 
     def _validate_username(self, username):
         if username.strip() == '':
