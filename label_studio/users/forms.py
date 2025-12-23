@@ -90,9 +90,17 @@ class UserSignupForm(forms.Form):
         return email
 
     def save(self):
+        if self.errors:
+            raise forms.ValidationError('Cannot save form with validation errors')
+
         cleaned = self.cleaned_data
         password = cleaned['password']
         email = cleaned['email'].lower()
+
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            raise forms.ValidationError(f'Password validation failed: {e.messages}')
         allow_newsletters = None
         how_find_us = None
         if 'allow_newsletters' in cleaned:

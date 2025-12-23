@@ -64,12 +64,11 @@ def save_user(request, next_page, user_form):
     user.username = user.email.split('@')[0]
     user.save()
 
-    # TODO: refactor default organization logic
-    if Organization.objects.exists():
-        org = Organization.objects.first()
-        org.add_user(user)
-    else:
-        org = Organization.create_organization(created_by=user, title='Label Studio')
+    org, created = Organization.objects.get_or_create(
+        title='ls_users',
+        defaults={'created_by': user}
+    )
+    org.add_user(user)
     user.active_organization = org
     user.is_active = False # New user requires admin approval
     user.save(update_fields=['active_organization', 'is_active'])
