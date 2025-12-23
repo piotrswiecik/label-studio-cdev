@@ -14,6 +14,7 @@ from colorama import Fore, init
 if sys.platform == 'win32':
     init(convert=True)
 
+from django.conf import settings
 from django.core.management import call_command
 from django.core.wsgi import get_wsgi_application
 from django.db import DEFAULT_DB_ALIAS, IntegrityError, connections
@@ -172,7 +173,7 @@ def _create_user(input_args, config):
     org = Organization.objects.first()
     if not org:
         org = Organization.create_organization(
-            created_by=user, title='Label Studio', legacy_api_tokens_enabled=input_args.enable_legacy_api_token
+            created_by=user, title=settings.DEFAULT_ORGANIZATION_NAME, legacy_api_tokens_enabled=input_args.enable_legacy_api_token
         )
     else:
         org.add_user(user)

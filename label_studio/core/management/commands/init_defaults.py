@@ -56,7 +56,7 @@ class Command(BaseCommand):
 
         org = Organization.objects.first()
         if not org:
-            org = org_fn(title='Label Studio', created_by=user)
+            org = org_fn(title=settings.DEFAULT_ORGANIZATION_NAME, created_by=user)
             self.stdout.write(self.style.SUCCESS('Staff organization created successfully.'))
         else:
             org.add_user(user)
