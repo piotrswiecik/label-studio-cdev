@@ -65,7 +65,7 @@ def save_user(request, next_page, user_form):
     user.save()
 
     org, created = Organization.objects.get_or_create(
-        title=settings.DEFAULT_USER_ORGANIZATION_NAME,
+        title=settings.DEFAULT_ORGANIZATION_NAME,
         defaults={'created_by': user}
     )
     org.add_user(user)

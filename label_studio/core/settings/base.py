@@ -637,8 +637,7 @@ IO_STORAGES_IMPORT_LINK_NAMES = [
 ]
 
 CREATE_ORGANIZATION = 'organizations.functions.create_organization'
-DEFAULT_ORGANIZATION_NAME = get_env('DEFAULT_ORGANIZATION_NAME', 'coronaryai_staff')
-DEFAULT_USER_ORGANIZATION_NAME = get_env('DEFAULT_USER_ORGANIZATION_NAME', 'coronaryai_users')
+DEFAULT_ORGANIZATION_NAME = get_env('DEFAULT_ORGANIZATION_NAME', 'coronary_ai')
 SAVE_USER = 'users.functions.save_user'
 POST_PROCESS_REIMPORT = 'core.utils.common.empty'
 USER_SERIALIZER = 'users.serializers.BaseUserSerializer'
