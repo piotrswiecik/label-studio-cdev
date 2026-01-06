@@ -90,7 +90,7 @@ def get_all_columns(project, *_):
             'type': 'Number',
             'help': 'Task ID',
             'target': 'tasks',
-            'visibility_defaults': {'explore': True, 'labeling': False},
+            'visibility_defaults': {'explore': True, 'labeling': True},
             'project_defined': False,
         }
     ]
