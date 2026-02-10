@@ -20,6 +20,13 @@ class Command(BaseCommand):
             help='Project ID to extract. If omitted, all projects are extracted.',
         )
 
+    @staticmethod
+    def _parse_json(value):
+        """Deserialize a value that may be a JSON string into a Python object."""
+        if isinstance(value, str):
+            return json.loads(value)
+        return value
+
     def _extract_project(self, cursor, project_id, dump_dir):
         cursor.execute(
             'SELECT id, data FROM task WHERE project_id = %s ORDER BY id',
@@ -39,17 +46,17 @@ class Command(BaseCommand):
                 'SELECT result FROM prediction WHERE task_id = %s',
                 [task_id],
             )
-            predictions = [row[0] for row in cursor.fetchall()]
+            predictions = [self._parse_json(row[0]) for row in cursor.fetchall()]
 
             cursor.execute(
                 'SELECT result FROM task_completion WHERE task_id = %s',
                 [task_id],
             )
-            annotations = [row[0] for row in cursor.fetchall()]
+            annotations = [self._parse_json(row[0]) for row in cursor.fetchall()]
 
             result.append({
                 'task_id': task_id,
-                'data': task_data,
+                'data': self._parse_json(task_data),
                 'predictions': predictions,
                 'annotations': annotations,
             })
