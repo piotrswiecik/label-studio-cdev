@@ -22,19 +22,19 @@ class Command(BaseCommand):
 
     def _extract_project(self, cursor, project_id, dump_dir):
         cursor.execute(
-            'SELECT id FROM task WHERE project_id = %s ORDER BY id',
+            'SELECT id, data FROM task WHERE project_id = %s ORDER BY id',
             [project_id],
         )
-        task_ids = [row[0] for row in cursor.fetchall()]
+        tasks = cursor.fetchall()
 
-        if not task_ids:
+        if not tasks:
             self.stdout.write(self.style.WARNING(
                 f'Project {project_id}: no tasks found, skipping'
             ))
             return
 
         result = []
-        for task_id in task_ids:
+        for task_id, task_data in tasks:
             cursor.execute(
                 'SELECT result FROM prediction WHERE task_id = %s',
                 [task_id],
@@ -49,6 +49,7 @@ class Command(BaseCommand):
 
             result.append({
                 'task_id': task_id,
+                'data': task_data,
                 'predictions': predictions,
                 'annotations': annotations,
             })
@@ -58,7 +59,7 @@ class Command(BaseCommand):
             json.dump(result, f, indent=2)
 
         self.stdout.write(self.style.SUCCESS(
-            f'Project {project_id}: extracted {len(task_ids)} tasks to {output_file}'
+            f'Project {project_id}: extracted {len(tasks)} tasks to {output_file}'
         ))
 
     def handle(self, *args, **options):
