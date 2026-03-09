@@ -872,9 +872,6 @@ class ProjectModelVersions(generics.RetrieveAPIView):
         project = self.get_object()
         model_version = request.data.get('model_version', None)
 
-        if not model_version:
-            raise RestValidationError('model_version param is required')
-
         count = project.delete_predictions(model_version=model_version)
 
         return Response(data=count)
@@ -951,6 +948,18 @@ def remove_project_tag(request, pk, tag_name):
         return Response({"message": "project not found"}, status=status.HTTP_404_NOT_FOUND)
     except ProjectTag.DoesNotExist:
         return Response({"message": "tag not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ProjectClearPredictionsAPI(generics.GenericAPIView):
+    permission_required = ViewClassPermission(
+        POST=all_permissions.projects_change,
+    )
+    queryset = Project.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+        count = project.delete_predictions()
+        return Response(data=count)
 
 
 @method_decorator(

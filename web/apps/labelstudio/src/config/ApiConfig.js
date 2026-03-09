@@ -23,6 +23,7 @@ export const API_CONFIG = {
     createProject: "POST:/projects",
     deleteProject: "DELETE:/projects/:pk",
     duplicateProject: "POST:/projects/:pk/duplicate",
+    clearPredictions: "POST:/projects/:pk/predictions/clear",
     projectResetCache: "POST:/projects/:pk/summary/reset",
 
     // Presigning

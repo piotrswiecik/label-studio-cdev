@@ -13,7 +13,7 @@ import { useProject } from "../../providers/ProjectProvider";
 import { cn } from "../../utils/bem";
 
 export const DangerZone = () => {
-  const { project } = useProject();
+  const { project, fetchProject } = useProject();
   const api = useAPI();
   const history = useHistory();
   const toast = useToast();
@@ -82,6 +82,16 @@ export const DangerZone = () => {
 
   const handleOnClick = (type) => () => {
     const actionConfig = {
+      predictions: {
+        title: "Delete Predictions",
+        message: (
+          <>
+            You are about to delete all {project.total_predictions_number} predictions from <strong>{project.title}</strong>. This action cannot be undone.
+          </>
+        ),
+        requiredWord: "predictions",
+        buttonText: "Delete Predictions",
+      },
       reset_cache: {
         title: "Reset Cache",
         message: (
@@ -125,7 +135,13 @@ export const DangerZone = () => {
       onConfirm: async () => {
         setProcessing(type);
         try {
-          if (type === "reset_cache") {
+          if (type === "predictions") {
+            await api.callApi("clearPredictions", {
+              params: { pk: project.id },
+            });
+            toast.show({ message: "All predictions deleted successfully" });
+            fetchProject(project.id, true);
+          } else if (type === "reset_cache") {
             await api.callApi("projectResetCache", {
               params: {
                 pk: project.id,
@@ -171,7 +187,8 @@ export const DangerZone = () => {
       },
       {
         type: "predictions",
-        disabled: true, //&& !project.total_predictions_number,
+        disabled: !project.total_predictions_number,
+        help: "Delete all predictions from this project. You can re-trigger them from the ML backend afterwards.",
         label: `Delete ${project.total_predictions_number} Predictions`,
       },
       {
