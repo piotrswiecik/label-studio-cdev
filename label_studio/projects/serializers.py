@@ -444,3 +444,5 @@ class ProjectDuplicateSerializer(serializers.Serializer):
     mode = serializers.CharField(default='settings', help_text='Duplication mode: "settings" or "settings,data"')
     title = serializers.CharField(required=False, allow_blank=True, help_text='Title for the new project')
     description = serializers.CharField(required=False, allow_blank=True, help_text='Description for the new project')
+    include_annotations = serializers.BooleanField(default=False, help_text='Include annotations when duplicating tasks')
+    include_predictions = serializers.BooleanField(default=False, help_text='Include predictions when duplicating tasks')

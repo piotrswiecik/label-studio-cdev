@@ -54,7 +54,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import exception_handler
-from tasks.models import Annotation, Task
+from tasks.models import Annotation, Prediction, Task
 from tasks.serializers import (
     NextTaskSerializer,
     TaskSerializer,
@@ -1015,7 +1015,9 @@ class ProjectDuplicateAPI(generics.CreateAPIView):
 
             # Optionally copy tasks
             if 'data' in mode:
-                self._copy_tasks(source_project, new_project)
+                include_annotations = data.get('include_annotations', False)
+                include_predictions = data.get('include_predictions', False)
+                self._copy_tasks(source_project, new_project, include_annotations, include_predictions)
 
         # Return serialized new project
         result_queryset = ProjectManager.with_counts_annotate(
@@ -1028,23 +1030,92 @@ class ProjectDuplicateAPI(generics.CreateAPIView):
         return Response(result_serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
-    def _copy_tasks(source_project, new_project):
+    def _copy_tasks(source_project, new_project, include_annotations=False, include_predictions=False):
         batch_size = getattr(settings, 'BATCH_SIZE', 1000)
         source_tasks = Task.objects.filter(project=source_project).order_by('id')
 
+        # old task id -> new Task object
+        task_id_map = {}
+
         batch = []
+        old_ids = []
         for task in source_tasks.iterator(chunk_size=batch_size):
             batch.append(Task(
                 project=new_project,
                 data=task.data,
                 meta=task.meta,
+                is_labeled=task.is_labeled if include_annotations else False,
             ))
+            old_ids.append(task.id)
             if len(batch) >= batch_size:
-                Task.objects.bulk_create(batch, batch_size=batch_size)
+                created = Task.objects.bulk_create(batch, batch_size=batch_size)
+                for old_id, new_task in zip(old_ids, created):
+                    task_id_map[old_id] = new_task
                 batch = []
+                old_ids = []
 
         if batch:
-            Task.objects.bulk_create(batch, batch_size=batch_size)
+            created = Task.objects.bulk_create(batch, batch_size=batch_size)
+            for old_id, new_task in zip(old_ids, created):
+                task_id_map[old_id] = new_task
+
+        # Copy annotations
+        if include_annotations and task_id_map:
+            ProjectDuplicateAPI._copy_annotations(source_project, new_project, task_id_map, batch_size)
+
+        # Copy predictions
+        if include_predictions and task_id_map:
+            ProjectDuplicateAPI._copy_predictions(source_project, new_project, task_id_map, batch_size)
 
         # Update project summary
         new_project.summary.update_data_columns(Task.objects.filter(project=new_project))
+
+    @staticmethod
+    def _copy_annotations(source_project, new_project, task_id_map, batch_size):
+        source_annotations = Annotation.objects.filter(project=source_project).order_by('id')
+
+        batch = []
+        for ann in source_annotations.iterator(chunk_size=batch_size):
+            new_task = task_id_map.get(ann.task_id)
+            if not new_task:
+                continue
+            batch.append(Annotation(
+                task=new_task,
+                project=new_project,
+                result=ann.result,
+                completed_by=ann.completed_by,
+                was_cancelled=ann.was_cancelled,
+                ground_truth=ann.ground_truth,
+                lead_time=ann.lead_time,
+                prediction=ann.prediction,
+                result_count=ann.result_count,
+            ))
+            if len(batch) >= batch_size:
+                Annotation.objects.bulk_create(batch, batch_size=batch_size)
+                batch = []
+
+        if batch:
+            Annotation.objects.bulk_create(batch, batch_size=batch_size)
+
+    @staticmethod
+    def _copy_predictions(source_project, new_project, task_id_map, batch_size):
+        source_predictions = Prediction.objects.filter(project=source_project).order_by('id')
+
+        batch = []
+        for pred in source_predictions.iterator(chunk_size=batch_size):
+            new_task = task_id_map.get(pred.task_id)
+            if not new_task:
+                continue
+            batch.append(Prediction(
+                task=new_task,
+                project=new_project,
+                result=pred.result,
+                score=pred.score,
+                model_version=pred.model_version,
+            ))
+            if len(batch) >= batch_size:
+                Prediction.objects.bulk_create(batch, batch_size=batch_size)
+                batch = []
+
+        if batch:
+            Prediction.objects.bulk_create(batch, batch_size=batch_size)

@@ -672,12 +672,14 @@ export const ConfigPage = ({
     __lsa("labeling_setup.list.browse");
   }, []);
 
+  const initialConfigLoaded = React.useRef(false);
   React.useEffect(() => {
-    if (initialConfig) {
+    if (initialConfig && !initialConfigLoaded.current) {
+      initialConfigLoaded.current = true;
       setTemplate(initialConfig);
       setMode("view");
     }
-  }, []);
+  }, [initialConfig]);
 
   if (!show) return null;
 

@@ -14,6 +14,7 @@ import Input from "../../components/Form/Elements/Input/Input";
 import { Space } from "../../components/Space/Space";
 import { useAPI } from "../../providers/ApiProvider";
 
+
 const DEFAULT_CARD_COLORS = ["#FFFFFF", "#FDFDFC"];
 
 const TagFilterBar = ({ allTags, selectedTags, onTagToggle, onClearAll }) => {
@@ -50,25 +51,44 @@ const TagFilterBar = ({ allTags, selectedTags, onTagToggle, onClearAll }) => {
   );
 };
 
-const DuplicateModalBody = ({ defaultTitle, defaultDescription }) => {
+const DuplicateModalContent = ({ defaultTitle, defaultDescription, onDuplicate }) => {
   const ctrl = useModalControls();
-  const title = ctrl?.state?.title ?? defaultTitle;
-  const description = ctrl?.state?.description ?? defaultDescription;
-  const mode = ctrl?.state?.mode ?? "settings";
+  const [title, setTitle] = useState(defaultTitle);
+  const [description, setDescription] = useState(defaultDescription);
+  const [mode, setMode] = useState("settings");
+  const [includeAnnotations, setIncludeAnnotations] = useState(false);
+  const [includePredictions, setIncludePredictions] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await onDuplicate({
+        title,
+        description,
+        mode,
+        include_annotations: mode === "settings,data" ? includeAnnotations : false,
+        include_predictions: mode === "settings,data" ? includePredictions : false,
+      });
+      ctrl?.hide();
+    } catch (e) {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
       <Input
         label="Project title"
         value={title}
-        onChange={(e) => ctrl?.setState({ ...ctrl.state, title: e.target.value })}
+        onChange={(e) => setTitle(e.target.value)}
         autoFocus
       />
       <div style={{ marginTop: 12 }}>
         <Input
           label="Description"
           value={description}
-          onChange={(e) => ctrl?.setState({ ...ctrl.state, description: e.target.value })}
+          onChange={(e) => setDescription(e.target.value)}
         />
       </div>
       <div style={{ marginTop: 16 }}>
@@ -81,7 +101,7 @@ const DuplicateModalBody = ({ defaultTitle, defaultDescription }) => {
             name="duplicate-mode"
             value="settings"
             checked={mode === "settings"}
-            onChange={() => ctrl?.setState({ ...ctrl.state, mode: "settings" })}
+            onChange={() => setMode("settings")}
           />{" "}
           Settings only
         </label>
@@ -91,48 +111,50 @@ const DuplicateModalBody = ({ defaultTitle, defaultDescription }) => {
             name="duplicate-mode"
             value="settings,data"
             checked={mode === "settings,data"}
-            onChange={() => ctrl?.setState({ ...ctrl.state, mode: "settings,data" })}
+            onChange={() => setMode("settings,data")}
           />{" "}
           Settings and tasks
         </label>
       </div>
+      {mode === "settings,data" && (
+        <div style={{ marginTop: 12, paddingLeft: 4 }}>
+          <label style={{ display: "block", cursor: "pointer", marginBottom: 4 }}>
+            <input
+              type="checkbox"
+              checked={includeAnnotations}
+              onChange={(e) => setIncludeAnnotations(e.target.checked)}
+            />{" "}
+            Include annotations
+          </label>
+          <label style={{ display: "block", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={includePredictions}
+              onChange={(e) => setIncludePredictions(e.target.checked)}
+            />{" "}
+            Include predictions
+          </label>
+        </div>
+      )}
+      <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
+        <Space align="end">
+          <Button
+            variant="neutral"
+            look="outline"
+            onClick={() => ctrl?.hide()}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={loading}
+            waiting={loading}
+            onClick={handleSubmit}
+          >
+            Duplicate
+          </Button>
+        </Space>
+      </div>
     </div>
-  );
-};
-
-const DuplicateModalFooter = ({ onDuplicate }) => {
-  const ctrl = useModalControls();
-  const [loading, setLoading] = useState(false);
-
-  return (
-    <Space align="end">
-      <Button
-        variant="neutral"
-        look="outline"
-        onClick={() => ctrl?.hide()}
-      >
-        Cancel
-      </Button>
-      <Button
-        disabled={loading}
-        waiting={loading}
-        onClick={async () => {
-          setLoading(true);
-          try {
-            await onDuplicate({
-              title: ctrl?.state?.title ?? "",
-              description: ctrl?.state?.description ?? "",
-              mode: ctrl?.state?.mode ?? "settings",
-            });
-            ctrl?.hide();
-          } catch (e) {
-            setLoading(false);
-          }
-        }}
-      >
-        Duplicate
-      </Button>
-    </Space>
   );
 };
 
@@ -245,17 +267,13 @@ const ProjectCard = ({ project, onTagClick, onRefresh }) => {
       width: 500,
       allowClose: true,
       body: () => (
-        <DuplicateModalBody
+        <DuplicateModalContent
           defaultTitle={defaultTitle}
           defaultDescription={defaultDescription}
-        />
-      ),
-      footer: () => (
-        <DuplicateModalFooter
-          onDuplicate={async ({ title, description, mode }) => {
+          onDuplicate={async ({ title, description, mode, include_annotations, include_predictions }) => {
             const result = await api.callApi("duplicateProject", {
               params: { pk: project.id },
-              body: { title, description, mode },
+              body: { title, description, mode, include_annotations, include_predictions },
             });
             if (result?.id) {
               history.push(`/projects/${result.id}/data`);
