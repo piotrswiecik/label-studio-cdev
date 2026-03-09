@@ -1,13 +1,18 @@
 import chr from "chroma-js";
 import { format } from "date-fns";
-import {useMemo, useState} from "react";
-import { NavLink } from "react-router-dom";
+import {useCallback, useMemo, useState} from "react";
+import { NavLink, useHistory } from "react-router-dom";
 import { IconCheck, IconEllipsis, IconMinus, IconSparks } from "@humansignal/icons";
 import { Userpic, Button, Dropdown, Tooltip } from "@humansignal/ui";
 import { Menu, Pagination } from "../../components";
 import { cn } from "../../utils/bem";
 import { absoluteURL } from "../../utils/helpers";
 import { ProjectStateChip } from "@humansignal/app-common";
+import { modal } from "../../components/Modal/Modal";
+import { useModalControls } from "../../components/Modal/ModalPopup";
+import Input from "../../components/Form/Elements/Input/Input";
+import { Space } from "../../components/Space/Space";
+import { useAPI } from "../../providers/ApiProvider";
 
 const DEFAULT_CARD_COLORS = ["#FFFFFF", "#FDFDFC"];
 
@@ -45,7 +50,93 @@ const TagFilterBar = ({ allTags, selectedTags, onTagToggle, onClearAll }) => {
   );
 };
 
-export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, pageSize }) => {
+const DuplicateModalBody = ({ defaultTitle, defaultDescription }) => {
+  const ctrl = useModalControls();
+  const title = ctrl?.state?.title ?? defaultTitle;
+  const description = ctrl?.state?.description ?? defaultDescription;
+  const mode = ctrl?.state?.mode ?? "settings";
+
+  return (
+    <div>
+      <Input
+        label="Project title"
+        value={title}
+        onChange={(e) => ctrl?.setState({ ...ctrl.state, title: e.target.value })}
+        autoFocus
+      />
+      <div style={{ marginTop: 12 }}>
+        <Input
+          label="Description"
+          value={description}
+          onChange={(e) => ctrl?.setState({ ...ctrl.state, description: e.target.value })}
+        />
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <label style={{ display: "block", marginBottom: 4, fontWeight: 500, fontSize: 14 }}>
+          What to duplicate
+        </label>
+        <label style={{ display: "block", cursor: "pointer", marginBottom: 4 }}>
+          <input
+            type="radio"
+            name="duplicate-mode"
+            value="settings"
+            checked={mode === "settings"}
+            onChange={() => ctrl?.setState({ ...ctrl.state, mode: "settings" })}
+          />{" "}
+          Settings only
+        </label>
+        <label style={{ display: "block", cursor: "pointer" }}>
+          <input
+            type="radio"
+            name="duplicate-mode"
+            value="settings,data"
+            checked={mode === "settings,data"}
+            onChange={() => ctrl?.setState({ ...ctrl.state, mode: "settings,data" })}
+          />{" "}
+          Settings and tasks
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const DuplicateModalFooter = ({ onDuplicate }) => {
+  const ctrl = useModalControls();
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <Space align="end">
+      <Button
+        variant="neutral"
+        look="outline"
+        onClick={() => ctrl?.hide()}
+      >
+        Cancel
+      </Button>
+      <Button
+        disabled={loading}
+        waiting={loading}
+        onClick={async () => {
+          setLoading(true);
+          try {
+            await onDuplicate({
+              title: ctrl?.state?.title ?? "",
+              description: ctrl?.state?.description ?? "",
+              mode: ctrl?.state?.mode ?? "settings",
+            });
+            ctrl?.hide();
+          } catch (e) {
+            setLoading(false);
+          }
+        }}
+      >
+        Duplicate
+      </Button>
+    </Space>
+  );
+};
+
+export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, pageSize, onRefresh }) => {
   const [selectedTags, setSelectedTags] = useState([]);
 
   const allTags = useMemo(() => {
@@ -83,7 +174,7 @@ export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, 
       />
       <div className={cn("projects-page").elem("list").toClassName()}>
         {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+          <ProjectCard key={project.id} project={project} onRefresh={onRefresh} />
         ))}
       </div>
       <div className={cn("projects-page").elem("pages").toClassName()}>
@@ -119,7 +210,10 @@ export const EmptyProjectsList = ({ openModal }) => {
   );
 };
 
-const ProjectCard = ({ project, onTagClick }) => {
+const ProjectCard = ({ project, onTagClick, onRefresh }) => {
+  const api = useAPI();
+  const history = useHistory();
+
   const color = useMemo(() => {
     return DEFAULT_CARD_COLORS.includes(project.color) ? null : project.color;
   }, [project]);
@@ -138,6 +232,41 @@ const ProjectCard = ({ project, onTagClick }) => {
         }
       : {};
   }, [color]);
+
+  const handleDuplicate = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const defaultTitle = `Copy of ${project.title || "New project"}`;
+    const defaultDescription = project.description || "";
+
+    modal({
+      title: "Duplicate Project",
+      width: 500,
+      allowClose: true,
+      body: () => (
+        <DuplicateModalBody
+          defaultTitle={defaultTitle}
+          defaultDescription={defaultDescription}
+        />
+      ),
+      footer: () => (
+        <DuplicateModalFooter
+          onDuplicate={async ({ title, description, mode }) => {
+            const result = await api.callApi("duplicateProject", {
+              params: { pk: project.id },
+              body: { title, description, mode },
+            });
+            if (result?.id) {
+              history.push(`/projects/${result.id}/data`);
+            } else if (onRefresh) {
+              onRefresh();
+            }
+          }}
+        />
+      ),
+    });
+  }, [project, api, history, onRefresh]);
 
   return (
     <NavLink
@@ -168,6 +297,7 @@ const ProjectCard = ({ project, onTagClick }) => {
                   <Menu contextual>
                     <Menu.Item href={`/projects/${project.id}/settings`}>Settings</Menu.Item>
                     <Menu.Item href={`/projects/${project.id}/data?labeling=1`}>Label</Menu.Item>
+                    <Menu.Item onClick={handleDuplicate}>Duplicate</Menu.Item>
                   </Menu>
                 }
               >

@@ -438,3 +438,9 @@ class GetFieldsSerializer(serializers.Serializer):
     def validate_filter(self, value):
         if value in ['all', 'pinned_only', 'exclude_pinned']:
             return value
+
+
+class ProjectDuplicateSerializer(serializers.Serializer):
+    mode = serializers.CharField(default='settings', help_text='Duplication mode: "settings" or "settings,data"')
+    title = serializers.CharField(required=False, allow_blank=True, help_text='Title for the new project')
+    description = serializers.CharField(required=False, allow_blank=True, help_text='Description for the new project')

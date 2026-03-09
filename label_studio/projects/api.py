@@ -36,6 +36,7 @@ from projects.models import Project, ProjectImport, ProjectManager, ProjectReimp
 from projects.serializers import (
     GetFieldsSerializer,
     ProjectCountsSerializer,
+    ProjectDuplicateSerializer,
     ProjectImportSerializer,
     ProjectLabelConfigSerializer,
     ProjectModelVersionExtendedSerializer,
@@ -950,3 +951,100 @@ def remove_project_tag(request, pk, tag_name):
         return Response({"message": "project not found"}, status=status.HTTP_404_NOT_FOUND)
     except ProjectTag.DoesNotExist:
         return Response({"message": "tag not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@method_decorator(
+    name='post',
+    decorator=extend_schema(
+        tags=['Projects'],
+        summary='Duplicate project',
+        description='Duplicate an existing project with its settings and optionally its tasks.',
+        request=ProjectDuplicateSerializer,
+        responses={201: ProjectSerializer},
+    ),
+)
+class ProjectDuplicateAPI(generics.CreateAPIView):
+    serializer_class = ProjectDuplicateSerializer
+    permission_required = ViewClassPermission(
+        POST=all_permissions.projects_create,
+    )
+    queryset = Project.objects.all()
+
+    # Settings fields to copy from the source project
+    SETTINGS_FIELDS = [
+        'label_config', 'parsed_label_config', 'label_config_hash',
+        'expert_instruction', 'show_instruction',
+        'show_skip_button', 'enable_empty_annotation',
+        'show_annotation_history', 'show_collab_predictions',
+        'evaluate_predictions_automatically', 'reveal_preannotations_interactively',
+        'maximum_annotations', 'min_annotations_to_start_training',
+        'control_weights', 'data_types',
+        'sampling', 'skip_queue',
+        'show_ground_truth_first', 'show_overlap_first', 'overlap_cohort_percentage',
+        'task_data_login', 'task_data_password',
+        'color', 'custom_task_lock_ttl',
+    ]
+
+    def post(self, request, *args, **kwargs):
+        source_project = self.get_object()
+
+        serializer = ProjectDuplicateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        mode = data.get('mode', 'settings')
+        title = data.get('title') or f'Copy of {source_project.title}'
+        description = data.get('description', source_project.description or '')
+
+        # Build new project fields from source settings
+        project_fields = {field: getattr(source_project, field) for field in self.SETTINGS_FIELDS}
+        project_fields.update({
+            'title': title,
+            'description': description,
+            'created_by': request.user,
+            'organization': request.user.active_organization,
+            'is_draft': False,
+            'is_published': False,
+        })
+
+        with transaction.atomic():
+            new_project = Project.objects.create(**project_fields)
+
+            # Copy tags
+            new_project.project_tags.set(source_project.project_tags.all())
+
+            # Optionally copy tasks
+            if 'data' in mode:
+                self._copy_tasks(source_project, new_project)
+
+        # Return serialized new project
+        result_queryset = ProjectManager.with_counts_annotate(
+            Project.objects.filter(pk=new_project.pk)
+        )
+        result_serializer = ProjectSerializer(
+            result_queryset.first(),
+            context={'request': request, 'created_by': request.user},
+        )
+        return Response(result_serializer.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _copy_tasks(source_project, new_project):
+        batch_size = getattr(settings, 'BATCH_SIZE', 1000)
+        source_tasks = Task.objects.filter(project=source_project).order_by('id')
+
+        batch = []
+        for task in source_tasks.iterator(chunk_size=batch_size):
+            batch.append(Task(
+                project=new_project,
+                data=task.data,
+                meta=task.meta,
+            ))
+            if len(batch) >= batch_size:
+                Task.objects.bulk_create(batch, batch_size=batch_size)
+                batch = []
+
+        if batch:
+            Task.objects.bulk_create(batch, batch_size=batch_size)
+
+        # Update project summary
+        new_project.summary.update_data_columns(Task.objects.filter(project=new_project))
