@@ -1,6 +1,7 @@
 import { types } from "mobx-state-tree";
 
 import Registry from "../../core/Registry";
+import { customTypes } from "../../core/CustomTypes";
 import ControlBase from "./Base";
 import { AnnotationMixin } from "../../mixins/AnnotationMixin";
 import SeparatedControlMixin from "../../mixins/SeparatedControlMixin";
@@ -35,6 +36,8 @@ import { ToolManagerMixin } from "../../mixins/ToolManagerMixin";
 const TagAttrs = types.model({
   toname: types.maybeNull(types.string),
   strokewidth: types.optional(types.string, "15"),
+  opacity: types.optional(customTypes.range(), "0.6"),
+  fillopacity: types.maybeNull(customTypes.range()),
 });
 
 const Model = types

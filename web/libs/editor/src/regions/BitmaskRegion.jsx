@@ -38,9 +38,10 @@ const Model = types
   })
   .volatile(() => ({
     /**
-     * Determines node opacity. Can be any number between 0 and 1
+     * Determines node opacity. Can be any number between 0 and 1.
+     * Default used when control tag doesn't specify opacity.
      */
-    opacity: 0.6,
+    _defaultOpacity: 0.6,
     needsUpdate: 1,
     hideable: true,
 
@@ -75,6 +76,13 @@ const Model = types
     return {
       get parent() {
         return isAlive(self) ? self.object : null;
+      },
+      get opacity() {
+        const style = self.style || self.tag;
+        const fillopacity = style?.fillopacity;
+        const tagOpacity = fillopacity ?? style?.opacity;
+
+        return Number.parseFloat(tagOpacity ?? self._defaultOpacity);
       },
       get colorParts() {
         const style = self.style?.strokecolor || self.tag?.strokecolor || defaultStyle?.strokecolor;

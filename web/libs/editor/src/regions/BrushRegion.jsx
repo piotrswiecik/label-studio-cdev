@@ -141,9 +141,10 @@ const Model = types
     // strokeColor: types.optional(types.string, "red"),
 
     /**
-     * Determines node opacity. Can be any number between 0 and 1
+     * Determines node opacity. Can be any number between 0 and 1.
+     * Default used when control tag doesn't specify opacity.
      */
-    opacity: 0.6,
+    _defaultOpacity: 0.6,
     scaleX: 1,
     scaleY: 1,
 
@@ -161,6 +162,13 @@ const Model = types
     return {
       get parent() {
         return isAlive(self) ? self.object : null;
+      },
+      get opacity() {
+        const style = self.style || self.tag;
+        const fillopacity = style?.fillopacity;
+        const tagOpacity = fillopacity ?? style?.opacity;
+
+        return Number.parseFloat(tagOpacity ?? self._defaultOpacity);
       },
       get colorParts() {
         const style = self.style || self.tag || defaultStyle;
@@ -256,7 +264,6 @@ const Model = types
 
       setLayerRef(ref) {
         if (ref) {
-          ref.canvas._canvas.style.opacity = self.opacity;
           self.layerRef = ref;
         }
       },
@@ -693,6 +700,7 @@ const HtxBrushView = ({ item, setShapeRef }) => {
         <Group
           attrMy={item.needsUpdate}
           name="segmentation"
+          opacity={item.opacity}
           // onClick={e => {
           //     e.cancelBubble = false;
           // }}
@@ -758,13 +766,8 @@ const HtxBrushView = ({ item, setShapeRef }) => {
       </Layer>
       <Layer
         id={`${item.cleanId}_labels`}
-        ref={(ref) => {
-          if (ref) {
-            ref.canvas._canvas.style.opacity = item.opacity;
-          }
-        }}
       >
-        <Group>
+        <Group opacity={item.opacity}>
           <LabelOnMask item={item} color={item.strokeColor} />
         </Group>
       </Layer>
