@@ -103,6 +103,11 @@ class Task(TaskMixin, FsmHistoryStateModel):
         null=True,
         help_text='Whether this task can be skipped. Set to False to make task unskippable.',
     )
+    image_unreadable = models.BooleanField(
+        _('image_unreadable'),
+        default=False,
+        help_text='Whether the image in this task is unreadable or corrupted.',
+    )
     overlap = models.IntegerField(
         _('overlap'),
         default=1,

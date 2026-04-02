@@ -30,6 +30,7 @@ export const ViewColumnType = types.enumeration([
   "Unknown",
   "AgreementSelected",
   "TaskState",
+  "ImageUnreadable",
 ]);
 
 const typeShortMap = {
@@ -44,6 +45,7 @@ const typeShortMap = {
   Text: "txt",
   HyperText: "html",
   TimeSeries: "ts",
+  ImageUnreadable: "bool",
 };
 
 export const ViewColumnTypeShort = (type) => typeShortMap[type] || "str";
@@ -60,6 +62,7 @@ const typeNameMap = {
   Text: "Text",
   HyperText: "Hyper Text",
   TimeSeries: "Time Series",
+  ImageUnreadable: "Obraz nieczytelny",
 };
 
 export const ViewColumnTypeName = (type) => typeNameMap[type] || "String";

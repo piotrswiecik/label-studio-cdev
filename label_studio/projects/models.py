@@ -239,6 +239,11 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     show_annotation_history = models.BooleanField(
         _('show annotation history'), default=False, help_text='Show annotation history to annotator'
     )
+    show_image_unreadable = models.BooleanField(
+        _('show image unreadable'),
+        default=False,
+        help_text='Show the "Obraz nieczytelny" flag column in the Data Manager.',
+    )
     show_collab_predictions = models.BooleanField(
         _('show predictions to annotator'), default=True, help_text='If set, the annotator can view model predictions'
     )

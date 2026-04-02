@@ -70,6 +70,20 @@ export const AnnotationSettings = () => {
               {(collab !== null ? collab : project.show_collab_predictions) && <ModelVersionSelector />}
             </Form.Row>
 
+            <Divider height={32} />
+
+            <Form.Row columnCount={1}>
+              <br />
+              <div className={cn("settings-wrapper").elem("header").toClassName()}>Task Flags</div>
+              <div>
+                <Toggle
+                  label='Show "Obraz nieczytelny" flag'
+                  description="Allow annotators to mark tasks where the image is unreadable in the Data Manager."
+                  name="show_image_unreadable"
+                />
+              </div>
+            </Form.Row>
+
             <Form.Actions>
               <Form.Indicator>
                 <span case="success">Saved!</span>

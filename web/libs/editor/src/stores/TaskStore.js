@@ -30,7 +30,13 @@ const TaskStore = types
      * Whether this task can be skipped. Defaults to true if undefined.
      */
     allow_skip: types.optional(types.maybeNull(types.boolean), true),
+    image_unreadable: types.optional(types.boolean, false),
   })
+  .actions((self) => ({
+    setImageUnreadable(value) {
+      self.image_unreadable = value;
+    },
+  }))
   .views((self) => ({
     get app() {
       return getParent(self);

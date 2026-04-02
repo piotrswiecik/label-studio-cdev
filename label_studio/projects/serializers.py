@@ -218,6 +218,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'show_skip_button',
             'enable_empty_annotation',
             'show_annotation_history',
+            'show_image_unreadable',
             'organization',
             'color',
             'maximum_annotations',

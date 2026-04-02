@@ -131,11 +131,55 @@ const HistoryTab: FC<any> = inject("store")(
   }),
 );
 
+const ImageUnreadableFlag: FC<any> = inject("store")(
+  observer(function ImageUnreadableFlag({ store }: any): JSX.Element | null {
+    const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.checked;
+      const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+
+      try {
+        const res = await fetch(`/api/tasks/${store.task.id}/`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+          },
+          body: JSON.stringify({ image_unreadable: newValue }),
+        });
+
+        if (res.ok) {
+          store.task.setImageUnreadable(newValue);
+        }
+      } catch (err) {
+        console.error("Failed to update image_unreadable:", err);
+      }
+    };
+
+    return (
+      <div className={cn("details").elem("section").toClassName()}>
+        <div className={cn("details").elem("section-head").toClassName()}>Task Flags</div>
+        <div className={cn("details").elem("section-content").toClassName()}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 0 4px 16px" }}>
+            <input
+              type="checkbox"
+              checked={store.task.image_unreadable}
+              onChange={handleChange}
+              style={{ cursor: "pointer", width: 16, height: 16 }}
+            />
+            <span style={{ color: store.task.image_unreadable ? "#d00" : "inherit" }}>Obraz nieczytelny</span>
+          </label>
+        </div>
+      </div>
+    );
+  }),
+);
+
 const InfoTab: FC<any> = inject("store")(
-  observer(function InfoTab({ selection }: any): JSX.Element {
+  observer(function InfoTab({ store, selection }: any): JSX.Element {
     const nothingSelected = !selection || selection.size === 0;
     return (
       <>
+        <ImageUnreadableFlag />
         <div className={cn("info").toClassName()}>
           <div className={cn("info").elem("section-tab").toClassName()}>
             {nothingSelected ? (
@@ -162,6 +206,7 @@ const GeneralPanel: FC<any> = inject("store")(
     const showAnnotationHistory = store.hasInterface("annotations:history");
     return (
       <>
+        <ImageUnreadableFlag />
         <div className={cn("details").elem("section").toClassName()}>
           <AnnotationHistory
             inline

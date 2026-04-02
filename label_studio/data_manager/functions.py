@@ -271,6 +271,17 @@ def get_all_columns(project, *_):
         },
     ]
 
+    if getattr(project, 'show_image_unreadable', False):
+        result['columns'].append({
+            'id': 'image_unreadable',
+            'title': 'Obraz nieczytelny',
+            'type': 'Boolean',
+            'help': 'Whether the image in this task is unreadable',
+            'target': 'tasks',
+            'visibility_defaults': {'explore': True, 'labeling': False},
+            'project_defined': False,
+        })
+
     result['columns'].append(data_root)
 
     return result
