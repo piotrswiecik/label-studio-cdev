@@ -282,6 +282,16 @@ def get_all_columns(project, *_):
             'project_defined': False,
         })
 
+    result['columns'].append({
+        'id': 'task_completed',
+        'title': 'Zadanie zakonczone',
+        'type': 'Boolean',
+        'help': 'Whether this task has been marked as completed',
+        'target': 'tasks',
+        'visibility_defaults': {'explore': True, 'labeling': False},
+        'project_defined': False,
+    })
+
     result['columns'].append(data_root)
 
     return result

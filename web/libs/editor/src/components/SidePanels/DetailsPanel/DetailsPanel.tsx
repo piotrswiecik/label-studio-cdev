@@ -131,43 +131,68 @@ const HistoryTab: FC<any> = inject("store")(
   }),
 );
 
+const TaskFlagCheckbox: FC<{
+  label: string;
+  checked: boolean;
+  activeColor: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ label, checked, activeColor, onChange }) => (
+  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 0 4px 16px" }}>
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      style={{ cursor: "pointer", width: 16, height: 16 }}
+    />
+    <span style={{ color: checked ? activeColor : "inherit" }}>{label}</span>
+  </label>
+);
+
 const ImageUnreadableFlag: FC<any> = inject("store")(
   observer(function ImageUnreadableFlag({ store }: any): JSX.Element | null {
-    const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.checked;
+    const patchTask = async (field: string, value: boolean) => {
       const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1];
 
-      try {
-        const res = await fetch(`/api/tasks/${store.task.id}/`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-          },
-          body: JSON.stringify({ image_unreadable: newValue }),
-        });
+      const res = await fetch(`/api/tasks/${store.task.id}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+        body: JSON.stringify({ [field]: value }),
+      });
 
-        if (res.ok) {
-          store.task.setImageUnreadable(newValue);
-        }
-      } catch (err) {
-        console.error("Failed to update image_unreadable:", err);
-      }
+      return res.ok;
     };
 
     return (
       <div className={cn("details").elem("section").toClassName()}>
         <div className={cn("details").elem("section-head").toClassName()}>Task Flags</div>
         <div className={cn("details").elem("section-content").toClassName()}>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "4px 0 4px 16px" }}>
-            <input
-              type="checkbox"
-              checked={store.task.image_unreadable}
-              onChange={handleChange}
-              style={{ cursor: "pointer", width: 16, height: 16 }}
-            />
-            <span style={{ color: store.task.image_unreadable ? "#d00" : "inherit" }}>Obraz nieczytelny</span>
-          </label>
+          <TaskFlagCheckbox
+            label="Obraz nieczytelny"
+            checked={store.task.image_unreadable}
+            activeColor="#d00"
+            onChange={async (e) => {
+              const newValue = e.target.checked;
+
+              if (await patchTask("image_unreadable", newValue)) {
+                store.task.setImageUnreadable(newValue);
+              }
+            }}
+          />
+          <TaskFlagCheckbox
+            label="Zadanie zakonczone"
+            checked={store.task.task_completed}
+            activeColor="#080"
+            onChange={async (e) => {
+              const newValue = e.target.checked;
+
+              if (await patchTask("task_completed", newValue)) {
+                store.task.setTaskCompleted(newValue);
+              }
+            }}
+          />
         </div>
       </div>
     );

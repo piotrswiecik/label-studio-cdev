@@ -108,6 +108,11 @@ class Task(TaskMixin, FsmHistoryStateModel):
         default=False,
         help_text='Whether the image in this task is unreadable or corrupted.',
     )
+    task_completed = models.BooleanField(
+        _('task_completed'),
+        default=False,
+        help_text='Whether this task has been marked as completed by the annotator.',
+    )
     overlap = models.IntegerField(
         _('overlap'),
         default=1,

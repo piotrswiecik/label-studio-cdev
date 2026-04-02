@@ -31,10 +31,14 @@ const TaskStore = types
      */
     allow_skip: types.optional(types.maybeNull(types.boolean), true),
     image_unreadable: types.optional(types.boolean, false),
+    task_completed: types.optional(types.boolean, false),
   })
   .actions((self) => ({
     setImageUnreadable(value) {
       self.image_unreadable = value;
+    },
+    setTaskCompleted(value) {
+      self.task_completed = value;
     },
   }))
   .views((self) => ({
