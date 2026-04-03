@@ -1,5 +1,5 @@
 import { inject, observer } from "mobx-react";
-import type { FC } from "react";
+import { type FC, useEffect, useState } from "react";
 import { cn } from "../../../utils/bem";
 import { Comments as CommentsComponent } from "../../Comments/Comments";
 import { AnnotationHistory } from "../../CurrentEntity/AnnotationHistory";
@@ -150,6 +150,22 @@ const TaskFlagCheckbox: FC<{
 
 const ImageUnreadableFlag: FC<any> = inject("store")(
   observer(function ImageUnreadableFlag({ store }: any): JSX.Element | null {
+    const [showImageUnreadable, setShowImageUnreadable] = useState(false);
+
+    useEffect(() => {
+      const projectId = store.project?.id || window.location.pathname.match(/\/projects\/(\d+)/)?.[1];
+      if (!projectId) return;
+
+      fetch(`/api/projects/${projectId}/`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            setShowImageUnreadable(!!data.show_image_unreadable);
+          }
+        })
+        .catch(() => {});
+    }, [store.project?.id, store.task?.id]);
+
     const patchTask = async (field: string, value: boolean) => {
       const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1];
 
@@ -169,18 +185,20 @@ const ImageUnreadableFlag: FC<any> = inject("store")(
       <div className={cn("details").elem("section").toClassName()}>
         <div className={cn("details").elem("section-head").toClassName()}>Task Flags</div>
         <div className={cn("details").elem("section-content").toClassName()}>
-          <TaskFlagCheckbox
-            label="Obraz nieczytelny"
-            checked={store.task.image_unreadable}
-            activeColor="#d00"
-            onChange={async (e) => {
-              const newValue = e.target.checked;
+          {showImageUnreadable && (
+            <TaskFlagCheckbox
+              label="Obraz nieczytelny"
+              checked={store.task.image_unreadable}
+              activeColor="#d00"
+              onChange={async (e) => {
+                const newValue = e.target.checked;
 
-              if (await patchTask("image_unreadable", newValue)) {
-                store.task.setImageUnreadable(newValue);
-              }
-            }}
-          />
+                if (await patchTask("image_unreadable", newValue)) {
+                  store.task.setImageUnreadable(newValue);
+                }
+              }}
+            />
+          )}
           <TaskFlagCheckbox
             label="Zadanie zakonczone"
             checked={store.task.task_completed}
