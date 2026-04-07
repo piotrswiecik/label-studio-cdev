@@ -54,6 +54,10 @@ _api_urlpatterns = [
     # CRAI-109 Update project tags
     path('<int:pk>/tags/', api.register_project_tag, name='add-project-tags'),
     path('<int:pk>/tags/<str:tag_name>/', api.remove_project_tag, name='remove-project-tags'),
+    # Archive
+    path('<int:pk>/archive/', api.ProjectArchiveAPI.as_view(), name='project-archive'),
+    path('<int:pk>/unarchive/', api.ProjectUnarchiveAPI.as_view(), name='project-unarchive'),
+    path('archived/', api.ProjectArchivedListAPI.as_view(), name='project-archived-list'),
 ]
 
 _api_urlpatterns_templates = [

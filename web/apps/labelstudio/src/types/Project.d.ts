@@ -97,4 +97,7 @@ declare type APIProject = {
    * Number of finished tasks
    */
   queue_done: number;
+
+  /** Whether the project is archived */
+  is_archived?: boolean;
 };

@@ -1128,3 +1128,56 @@ class ProjectDuplicateAPI(generics.CreateAPIView):
 
         if batch:
             Prediction.objects.bulk_create(batch, batch_size=batch_size)
+
+
+class ProjectArchiveAPI(generics.GenericAPIView):
+    """Archive a project. Admin only."""
+
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+    def post(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'Only admins can archive projects.'}, status=status.HTTP_403_FORBIDDEN)
+        project = self.get_object()
+        if project.is_archived:
+            return Response({'detail': 'Project is already archived.'}, status=status.HTTP_400_BAD_REQUEST)
+        project.is_archived = True
+        project.save(update_fields=['is_archived'])
+        return Response(ProjectSerializer(project).data, status=status.HTTP_200_OK)
+
+
+class ProjectUnarchiveAPI(generics.GenericAPIView):
+    """Unarchive a project. Admin only."""
+
+    queryset = Project.all_objects.all()
+    serializer_class = ProjectSerializer
+
+    def post(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'Only admins can unarchive projects.'}, status=status.HTTP_403_FORBIDDEN)
+        project = self.get_object()
+        if not project.is_archived:
+            return Response({'detail': 'Project is not archived.'}, status=status.HTTP_400_BAD_REQUEST)
+        project.is_archived = False
+        project.save(update_fields=['is_archived'])
+        return Response(ProjectSerializer(project).data, status=status.HTTP_200_OK)
+
+
+class ProjectArchivedListAPI(generics.ListAPIView):
+    """List archived projects. Admin only."""
+
+    serializer_class = ProjectSerializer
+    pagination_class = ProjectListPagination
+
+    def get_queryset(self):
+        return Project.all_objects.filter(
+            organization=self.request.user.active_organization,
+            is_archived=True,
+            deleted_at__isnull=True,
+        ).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'Only admins can view archived projects.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().list(request, *args, **kwargs)

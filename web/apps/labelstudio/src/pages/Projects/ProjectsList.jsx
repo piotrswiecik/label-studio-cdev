@@ -158,7 +158,7 @@ const DuplicateModalContent = ({ defaultTitle, defaultDescription, onDuplicate }
   );
 };
 
-export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, pageSize, onRefresh }) => {
+export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, pageSize, onRefresh, showUnarchive }) => {
   const [selectedTags, setSelectedTags] = useState([]);
 
   const allTags = useMemo(() => {
@@ -196,7 +196,7 @@ export const ProjectsList = ({ projects, currentPage, totalItems, loadNextPage, 
       />
       <div className={cn("projects-page").elem("list").toClassName()}>
         {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} onRefresh={onRefresh} />
+          <ProjectCard key={project.id} project={project} onRefresh={onRefresh} showUnarchive={showUnarchive} />
         ))}
       </div>
       <div className={cn("projects-page").elem("pages").toClassName()}>
@@ -232,7 +232,7 @@ export const EmptyProjectsList = ({ openModal }) => {
   );
 };
 
-const ProjectCard = ({ project, onTagClick, onRefresh }) => {
+const ProjectCard = ({ project, onTagClick, onRefresh, showUnarchive }) => {
   const api = useAPI();
   const history = useHistory();
 
@@ -254,6 +254,20 @@ const ProjectCard = ({ project, onTagClick, onRefresh }) => {
         }
       : {};
   }, [color]);
+
+  const handleArchive = useCallback(async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    await api.callApi("archiveProject", { params: { pk: project.id } });
+    onRefresh?.();
+  }, [project, api, onRefresh]);
+
+  const handleUnarchive = useCallback(async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    await api.callApi("unarchiveProject", { params: { pk: project.id } });
+    onRefresh?.();
+  }, [project, api, onRefresh]);
 
   const handleDuplicate = useCallback((e) => {
     e.stopPropagation();
@@ -316,6 +330,13 @@ const ProjectCard = ({ project, onTagClick, onRefresh }) => {
                     <Menu.Item href={`/projects/${project.id}/settings`}>Settings</Menu.Item>
                     <Menu.Item href={`/projects/${project.id}/data?labeling=1`}>Label</Menu.Item>
                     <Menu.Item onClick={handleDuplicate}>Duplicate</Menu.Item>
+                    {window.APP_SETTINGS?.user?.isStaff && (
+                      showUnarchive ? (
+                        <Menu.Item onClick={handleUnarchive}>Unarchive</Menu.Item>
+                      ) : (
+                        <Menu.Item onClick={handleArchive}>Archive</Menu.Item>
+                      )
+                    )}
                   </Menu>
                 }
               >

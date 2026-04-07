@@ -142,13 +142,15 @@ class ProjectManager(models.Manager):
 
 
 class ProjectVisibleManager(ProjectManager):
-    """Default manager that hides soft-deleted projects (deleted_at IS NULL)."""
+    """Default manager that hides soft-deleted and archived projects."""
 
     def get_queryset(self):
         qs = super().get_queryset()
         # Avoid referencing columns that might not exist during early migrations
         if has_column_cached(self.model._meta.db_table, 'deleted_at'):
-            return qs.filter(deleted_at__isnull=True)
+            qs = qs.filter(deleted_at__isnull=True)
+        if has_column_cached(self.model._meta.db_table, 'is_archived'):
+            qs = qs.filter(is_archived=False)
         return qs
 
 
@@ -344,6 +346,12 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     )
 
     pinned_at = models.DateTimeField(_('pinned at'), null=True, default=None, help_text='Pinned date and time')
+
+    is_archived = models.BooleanField(
+        _('is archived'),
+        default=False,
+        help_text='Whether the project is archived. Archived projects are only visible to admins.',
+    )
 
     custom_task_lock_ttl = models.IntegerField(
         _('custom_task_lock_ttl'),

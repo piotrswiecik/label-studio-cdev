@@ -33,10 +33,26 @@ export const ProjectsPage = () => {
   const defaultPageSize = Number.parseInt(localStorage.getItem("pages:projects-list") ?? 30);
 
   const [modal, setModal] = React.useState(false);
+  const [showArchived, setShowArchived] = React.useState(false);
 
   const openModal = () => setModal(true);
 
   const closeModal = () => setModal(false);
+
+  const fetchArchivedProjects = async (page = currentPage, pageSize = defaultPageSize) => {
+    setNetworkState("loading");
+    abortController.renew();
+
+    const data = await api.callApi("archivedProjects", {
+      params: { page, page_size: pageSize },
+      signal: abortController.controller.current.signal,
+      errorFilter: (e) => e.error.includes("aborted"),
+    });
+
+    setTotalItems(data?.count ?? 1);
+    setProjectsList(data?.results ?? []);
+    setNetworkState("loaded");
+  };
 
   const fetchProjects = async (page = currentPage, pageSize = defaultPageSize) => {
     setNetworkState("loading");
@@ -104,12 +120,20 @@ export const ProjectsPage = () => {
 
   const loadNextPage = async (page, pageSize) => {
     setCurrentPage(page);
-    await fetchProjects(page, pageSize);
+    if (showArchived) {
+      await fetchArchivedProjects(page, pageSize);
+    } else {
+      await fetchProjects(page, pageSize);
+    }
   };
 
   React.useEffect(() => {
-    fetchProjects();
-  }, []);
+    if (showArchived) {
+      fetchArchivedProjects();
+    } else {
+      fetchProjects();
+    }
+  }, [showArchived]);
 
   React.useEffect(() => {
     // there is a nice page with Create button when list is empty
@@ -124,6 +148,24 @@ export const ProjectsPage = () => {
           <Spinner size={64} />
         </div>
         <div className={cn("projects-page").elem("content").toClassName()} case="loaded">
+          {window.APP_SETTINGS?.user?.isStaff && (
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <Button
+                size="small"
+                look={showArchived ? "outline" : "filled"}
+                onClick={() => setShowArchived(false)}
+              >
+                Active
+              </Button>
+              <Button
+                size="small"
+                look={showArchived ? "filled" : "outline"}
+                onClick={() => setShowArchived(true)}
+              >
+                Archived
+              </Button>
+            </div>
+          )}
           {projectsList.length ? (
             <ProjectsList
               projects={projectsList}
@@ -131,10 +173,15 @@ export const ProjectsPage = () => {
               totalItems={totalItems}
               loadNextPage={loadNextPage}
               pageSize={defaultPageSize}
-              onRefresh={() => fetchProjects()}
+              onRefresh={() => showArchived ? fetchArchivedProjects() : fetchProjects()}
+              showUnarchive={showArchived}
             />
           ) : (
-            <EmptyProjectsList openModal={openModal} />
+            showArchived ? (
+              <p>No archived projects.</p>
+            ) : (
+              <EmptyProjectsList openModal={openModal} />
+            )
           )}
           {modal && <CreateProject onClose={closeModal} />}
         </div>
