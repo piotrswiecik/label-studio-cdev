@@ -16,6 +16,6 @@ export POSTGRE_HOST=localhost
 export POSTGRE_PORT=5432
 
 echo "Building new migrations..."
-python label_studio/manage.py makemigrations
+poetry run python label_studio/manage.py makemigrations
 
 echo "Done."

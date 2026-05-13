@@ -20,6 +20,6 @@ echo "Using DB: $DJANGO_DB host=$POSTGRE_HOST port=$POSTGRE_PORT name=$POSTGRE_N
 echo "Rebuilding client app..."
 cd web && yarn build
 
-cd .. && python label_studio/manage.py collectstatic --noinput
+cd .. && poetry run python label_studio/manage.py collectstatic --noinput
 
 echo "Done."

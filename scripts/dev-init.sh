@@ -16,6 +16,6 @@ export POSTGRE_HOST=localhost
 export POSTGRE_PORT=5432
 
 echo "Initializing instance with defaults..."
-python label_studio/manage.py init_defaults
+poetry run python label_studio/manage.py init_defaults
 
 echo "Done."

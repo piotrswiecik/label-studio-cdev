@@ -2,6 +2,14 @@
 run-dev:
 	DJANGO_DB=sqlite LOG_DIR=tmp DEBUG=true LOG_LEVEL=DEBUG DJANGO_SETTINGS_MODULE=core.settings.label_studio poetry run python label_studio/manage.py runserver
 
+# Run full dev stack with docker compose Postgres, frontend HMR, and Django
+dev:
+	./scripts/dev.sh
+
+# Create/reset a local dev admin for the docker compose Postgres DB
+dev-admin:
+	./scripts/dev-admin.sh
+
 # Run Django dev migrations with Sqlite
 migrate-dev:
 	DJANGO_DB=sqlite LOG_DIR=tmp DEBUG=true LOG_LEVEL=DEBUG DJANGO_SETTINGS_MODULE=core.settings.label_studio poetry run python label_studio/manage.py migrate
