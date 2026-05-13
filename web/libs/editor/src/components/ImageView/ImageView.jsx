@@ -65,6 +65,12 @@ const splitRegions = (regions) => {
   };
 };
 
+const getDicomTagValue = (dicomMeta, tag) => {
+  const value = dicomMeta?.[tag]?.Value;
+
+  return Array.isArray(value) && value.length > 0 ? value[0] : undefined;
+};
+
 export const getCurrentImageMetadataText = (taskData, currentIndex = 0) => {
   const imageItems = taskData?.image_items;
 
@@ -78,6 +84,16 @@ export const getCurrentImageMetadataText = (taskData, currentIndex = 0) => {
   const patientId = taskData?.patient_id ?? taskData?.case_id;
   const projectionId = currentItem.projection_id;
   const frameNumber = currentItem.frame_number;
+  const primaryAngle =
+    currentItem.dicom?.positioner_primary_angle ??
+    currentItem.positioner_primary_angle ??
+    getDicomTagValue(currentItem.dicom_meta, "00181510");
+  const secondaryAngle =
+    currentItem.dicom?.positioner_secondary_angle ??
+    currentItem.positioner_secondary_angle ??
+    getDicomTagValue(currentItem.dicom_meta, "00181511");
+  const hasPrimaryAngle = primaryAngle !== undefined && primaryAngle !== null && primaryAngle !== "";
+  const hasSecondaryAngle = secondaryAngle !== undefined && secondaryAngle !== null && secondaryAngle !== "";
 
   if (patientId !== undefined && patientId !== null && patientId !== "") {
     parts.push(`Pacjent: ${patientId}`);
@@ -88,8 +104,15 @@ export const getCurrentImageMetadataText = (taskData, currentIndex = 0) => {
   if (frameNumber !== undefined && frameNumber !== null && frameNumber !== "") {
     parts.push(`klatka: ${frameNumber}`);
   }
+  if (hasPrimaryAngle && hasSecondaryAngle) {
+    parts.push(`kąt: ${primaryAngle} / ${secondaryAngle}`);
+  } else if (hasPrimaryAngle) {
+    parts.push(`kąt primary: ${primaryAngle}`);
+  } else if (hasSecondaryAngle) {
+    parts.push(`kąt secondary: ${secondaryAngle}`);
+  }
 
-  return parts.length > 1 || projectionId || frameNumber || frameNumber === 0 ? parts.join(" · ") : null;
+  return parts.length > 0 ? parts.join(" · ") : null;
 };
 
 const CurrentImageMetadata = observer(({ item, taskData }) => {
@@ -1128,9 +1151,9 @@ export default observer(
                 pageSizeSelectable={false}
                 disabled={isViewingAll}
               />
-              <CurrentImageMetadata item={item} taskData={store.task.dataObj} />
             </div>
           ) : null}
+          {paginationEnabled ? <CurrentImageMetadata item={item} taskData={store.task.dataObj} /> : null}
 
           <div
             ref={(node) => {

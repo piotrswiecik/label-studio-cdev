@@ -132,7 +132,7 @@
 }
 
 .withPagination {
-  padding-top: 30px; // pagination height 24px + 6px offset
+  padding-top: 54px; // pagination height 24px + metadata line 18px + offsets
 }
 
 .gallery {
@@ -166,16 +166,20 @@
   top: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
   width: 100%;
   padding-right: 40px; // for toolbar
 }
 
 .currentImageMetadata {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  z-index: 2;
+  max-width: min(560px, calc(100% - 72px));
   overflow: hidden;
   color: var(--color-neutral-content-subtler, #6f7275);
   font-size: 12px;
-  line-height: 24px;
+  line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
