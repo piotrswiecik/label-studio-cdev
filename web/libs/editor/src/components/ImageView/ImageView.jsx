@@ -65,6 +65,41 @@ const splitRegions = (regions) => {
   };
 };
 
+export const getCurrentImageMetadataText = (taskData, currentIndex = 0) => {
+  const imageItems = taskData?.image_items;
+
+  if (!Array.isArray(imageItems)) return null;
+
+  const currentItem = imageItems[currentIndex];
+
+  if (!currentItem || typeof currentItem !== "object") return null;
+
+  const parts = [];
+  const patientId = taskData?.patient_id ?? taskData?.case_id;
+  const projectionId = currentItem.projection_id;
+  const frameNumber = currentItem.frame_number;
+
+  if (patientId !== undefined && patientId !== null && patientId !== "") {
+    parts.push(`Pacjent: ${patientId}`);
+  }
+  if (projectionId !== undefined && projectionId !== null && projectionId !== "") {
+    parts.push(`Projekcja: ${projectionId}`);
+  }
+  if (frameNumber !== undefined && frameNumber !== null && frameNumber !== "") {
+    parts.push(`klatka: ${frameNumber}`);
+  }
+
+  return parts.length > 1 || projectionId || frameNumber || frameNumber === 0 ? parts.join(" · ") : null;
+};
+
+const CurrentImageMetadata = observer(({ item, taskData }) => {
+  const metadataText = getCurrentImageMetadataText(taskData, item.currentImage ?? 0);
+
+  if (!metadataText) return null;
+
+  return <div className={styles.currentImageMetadata}>{metadataText}</div>;
+});
+
 const Region = memo(({ region, showSelected = false }) => {
   return useObserver(() => Tree.renderItem(region, region.annotation, true));
 });
@@ -1093,6 +1128,7 @@ export default observer(
                 pageSizeSelectable={false}
                 disabled={isViewingAll}
               />
+              <CurrentImageMetadata item={item} taskData={store.task.dataObj} />
             </div>
           ) : null}
 
