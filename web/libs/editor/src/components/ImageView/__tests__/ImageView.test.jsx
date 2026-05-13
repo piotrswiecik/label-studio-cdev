@@ -19,7 +19,27 @@ describe("getCurrentImageMetadataText", () => {
     ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10");
   });
 
-  test("formats both DICOM projection angles when present", () => {
+  test("formats clinical projection display when present", () => {
+    expect(
+      getCurrentImageMetadataText(
+        {
+          patient_id: "25",
+          image_items: [
+            {
+              projection_id: "I0547398",
+              frame_number: 10,
+              projection: {
+                display: "RAO 18",
+              },
+            },
+          ],
+        },
+        0,
+      ),
+    ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10 · RAO 18");
+  });
+
+  test("does not display raw signed DICOM projection angles", () => {
     expect(
       getCurrentImageMetadataText(
         {
@@ -37,68 +57,7 @@ describe("getCurrentImageMetadataText", () => {
         },
         0,
       ),
-    ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10 · kąt: -17.9 / 0.4");
-  });
-
-  test("formats DICOM projection angles from raw metadata tags", () => {
-    expect(
-      getCurrentImageMetadataText(
-        {
-          patient_id: "25",
-          image_items: [
-            {
-              projection_id: "I0547398",
-              frame_number: 10,
-              dicom_meta: {
-                "00181510": { Value: [-17.9] },
-                "00181511": { Value: [0.4] },
-              },
-            },
-          ],
-        },
-        0,
-      ),
-    ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10 · kąt: -17.9 / 0.4");
-  });
-
-  test("formats only primary DICOM projection angle when present", () => {
-    expect(
-      getCurrentImageMetadataText(
-        {
-          patient_id: "25",
-          image_items: [
-            {
-              projection_id: "I0547398",
-              frame_number: 10,
-              dicom: {
-                positioner_primary_angle: -17.9,
-              },
-            },
-          ],
-        },
-        0,
-      ),
-    ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10 · kąt primary: -17.9");
-  });
-
-  test("formats only secondary DICOM projection angle when present", () => {
-    expect(
-      getCurrentImageMetadataText(
-        {
-          patient_id: "25",
-          image_items: [
-            {
-              projection_id: "I0547398",
-              frame_number: 10,
-              dicom: {
-                positioner_secondary_angle: 0.4,
-              },
-            },
-          ],
-        },
-        0,
-      ),
-    ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10 · kąt secondary: 0.4");
+    ).toBe("Pacjent: 25 · Projekcja: I0547398 · klatka: 10");
   });
 
   test("keeps old metadata output when DICOM metadata is missing", () => {
