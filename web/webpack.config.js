@@ -268,6 +268,9 @@ module.exports = composePlugins(
     return merge(config, {
       devtool,
       mode,
+      // Silence "Failed to parse source map" warnings from third-party deps
+      // (e.g. parse5) that ship code referencing .map files they don't include.
+      ignoreWarnings: [/Failed to parse source map/],
       plugins,
       optimization: optimizer(),
       devServer: process.env.MODE?.startsWith("standalone")

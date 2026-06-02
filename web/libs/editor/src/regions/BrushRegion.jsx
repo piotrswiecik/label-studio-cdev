@@ -316,6 +316,9 @@ const Model = types
         ctx.lineWidth = pathPoints.strokeWidth * self.scaleX * self.parent.stageScale;
         ctx.strokeStyle = self.strokeColor;
         ctx.globalCompositeOperation = pathPoints.compositeOperation;
+        // Erase at full strength regardless of the mask's display opacity (see
+        // drawLine in HtxBrushLayer for the full explanation).
+        if (pathPoints.compositeOperation === "destination-out") ctx.globalAlpha = 1;
         ctx.stroke();
         ctx.restore();
         lastPointX = x;
@@ -478,6 +481,11 @@ const HtxBrushLayer = observer(({ item, setShapeRef, pointsList }) => {
     ctx.lineWidth = strokeWidth;
     ctx.strokeStyle = strokeColor;
     ctx.globalCompositeOperation = compositeOperation;
+    // The mask's display opacity is applied to this context as globalAlpha by
+    // Konva (group opacity). For "destination-out" (eraser) strokes that alpha
+    // would scale how much is removed, leaving residue and requiring many passes
+    // at low opacity. Erasing must always remove pixels at full strength.
+    if (compositeOperation === "destination-out") ctx.globalAlpha = 1;
     ctx.stroke();
     ctx.restore();
   });
