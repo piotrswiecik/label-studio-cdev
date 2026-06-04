@@ -317,6 +317,10 @@ USE_USERNAME_FOR_LOGIN = False
 
 DISABLE_SIGNUP_WITHOUT_LINK = get_bool_env('DISABLE_SIGNUP_WITHOUT_LINK', False)
 
+# Hard lock on new user registration: the signup endpoint returns 403 on POST and the
+# signup form / links are hidden. Unlike DISABLE_SIGNUP_WITHOUT_LINK there is no token bypass.
+DISABLE_USER_REGISTRATION = get_bool_env('DISABLE_USER_REGISTRATION', False)
+
 # Password validation settings
 AUTH_PASSWORD_MIN_LENGTH = 8
 AUTH_PASSWORD_MAX_LENGTH = 128

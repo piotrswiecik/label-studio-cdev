@@ -86,6 +86,9 @@ def user_signup(request):
 
     # make a new user
     if request.method == 'POST':
+        if settings.DISABLE_USER_REGISTRATION is True:
+            raise PermissionDenied()
+
         organization = Organization.objects.first()
         if settings.DISABLE_SIGNUP_WITHOUT_LINK is True:
             if not (token and organization and token == organization.token):
@@ -118,6 +121,7 @@ def user_signup(request):
                 'token': token,
                 'found_us_options': forms.FOUND_US_OPTIONS,
                 'elaborate': forms.FOUND_US_ELABORATE,
+                'registration_disabled': settings.DISABLE_USER_REGISTRATION,
             },
         )
 
@@ -129,6 +133,7 @@ def user_signup(request):
             'organization_form': organization_form,
             'next': quote(next_page),
             'token': token,
+            'registration_disabled': settings.DISABLE_USER_REGISTRATION,
         },
     )
 

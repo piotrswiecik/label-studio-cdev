@@ -14,6 +14,16 @@
 {% endblock %}
 
 {% block user_content %}
+  {% if registration_disabled %}
+  <div class="form-wrapper">
+    <h2>Sign Up</h2>
+    <p class="">New user registration is currently disabled. Please contact your administrator for an invitation.</p>
+  </div>
+  <div class="text-wrapper">
+    <p class="">Already have an account?</p>
+    <a href="{% url 'user-login' %}{% querystring %}">Log in</a>
+  </div>
+  {% else %}
   <div class="form-wrapper">
     <h2>Sign Up</h2>
     <form id="signup-form"
@@ -64,4 +74,5 @@
       document.querySelector("#elaborateContainer").style.display = isOther ? 'block' : 'none';
     });
   </script>
+  {% endif %}
 {% endblock %}

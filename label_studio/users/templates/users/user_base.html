@@ -23,7 +23,7 @@ gtag('config', 'UA-129877673-1');
   <img src="{{ settings.HOSTNAME }}{% static 'images/opossum_hanging.svg' %}" height="128px" />
 
   <div class="toggle">
-    {% if not settings.DISABLE_SIGNUP_WITHOUT_LINK %}
+    {% if not settings.DISABLE_SIGNUP_WITHOUT_LINK and not settings.DISABLE_USER_REGISTRATION %}
         <a href="{{ settings.HOSTNAME }}/user/signup" class="{% if 'signup' in request.path %}active{% endif %}">Sign up</a>
         <a href="{{ settings.HOSTNAME }}/user/login" class="{% if 'login' in request.path %}active{% endif %}">Log in</a>
     {% endif %}

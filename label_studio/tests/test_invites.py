@@ -53,6 +53,31 @@ def test_reset_token_not_valid(business_client, client, settings):
 
 
 @pytest.mark.django_db
+def test_registration_disabled_blocks_post(client, settings):
+    settings.DISABLE_USER_REGISTRATION = True
+
+    # POST is rejected with 403 regardless of token
+    response = client.post('/user/signup', data={'email': 'test_user@example.com', 'password': 'test_password'})
+    assert response.status_code == 403, response.content
+
+    response = client.post(
+        '/user/signup/?token=anytoken', data={'email': 'test_user@example.com', 'password': 'test_password'}
+    )
+    assert response.status_code == 403, response.content
+
+
+@pytest.mark.django_db
+def test_registration_disabled_get_shows_message(client, settings):
+    settings.DISABLE_USER_REGISTRATION = True
+
+    # GET still renders the page but with a disabled message and no signup form
+    response = client.get('/user/signup/')
+    assert response.status_code == 200, response.content
+    assert str(response.content).find('registration is currently disabled') != -1
+    assert str(response.content).find('Create Account') == -1
+
+
+@pytest.mark.django_db
 def test_token_get_not_post_shows_form(business_client, client, settings):
     settings.DISABLE_SIGNUP_WITHOUT_LINK = True
 
