@@ -22,7 +22,7 @@ if [ ! -f .env ]; then
   cp .env.development .env
 fi
 
-docker compose -f docker-compose.dev.yml up -d
+# docker compose -f docker-compose.dev.yml up -d
 
 echo "Using DB: $DJANGO_DB host=$POSTGRE_HOST port=$POSTGRE_PORT name=$POSTGRE_NAME user=$POSTGRE_USER"
 poetry run python label_studio/manage.py migrate

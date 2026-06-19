@@ -207,6 +207,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'memberships': {'required': False},
             'title': {'required': False},
             'created_by': {'required': False},
+            'is_read_only': {'read_only': True},
         }
         fields = [
             'id',
@@ -257,6 +258,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'state',
             'project_tags',
             'is_archived',
+            'is_read_only',
         ]
 
     def validate_label_config(self, value):

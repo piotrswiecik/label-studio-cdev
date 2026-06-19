@@ -455,11 +455,15 @@ class AnnotationAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Annotation.objects.all()
 
     def perform_destroy(self, annotation):
+        if annotation.task.project.is_read_only:
+            raise PermissionDenied('This project is read-only. Annotations cannot be deleted.')
         annotation.delete()
 
     def update(self, request, *args, **kwargs):
         # save user history with annotator_id, time & annotation result
         annotation = self.get_object()
+        if annotation.task.project.is_read_only:
+            raise PermissionDenied('This project is read-only. Annotations cannot be modified.')
         # use updated instead of save to avoid duplicated signals
         Annotation.objects.filter(id=annotation.id).update(updated_by=request.user)
 
@@ -597,6 +601,9 @@ class AnnotationsListAPI(GetParentObjectMixin, generics.ListCreateAPIView):
         task = self.parent_object
         # annotator has write access only to annotations and it can't be checked it after serializer.save()
         user = self.request.user
+
+        if task.project.is_read_only:
+            raise PermissionDenied('This project is read-only. Annotations cannot be created.')
 
         # Check if task is being skipped and if it's allowed
         was_cancelled_get = bool_from_request(self.request.GET, 'was_cancelled', False)

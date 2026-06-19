@@ -122,6 +122,22 @@ export const DangerZone = () => {
         requiredWord: "delete",
         buttonText: "Delete Project",
       },
+      read_only: {
+        title: project.is_read_only ? "Make Project Editable" : "Make Project Read-Only",
+        message: project.is_read_only ? (
+          <>
+            You are about to make <strong>{project.title}</strong> editable again. Annotators will be able to create,
+            edit, and delete annotations.
+          </>
+        ) : (
+          <>
+            You are about to make <strong>{project.title}</strong> read-only. Annotators will be able to view
+            annotations but cannot create, edit, or delete them.
+          </>
+        ),
+        requiredWord: project.is_read_only ? "editable" : "read-only",
+        buttonText: project.is_read_only ? "Make Editable" : "Make Read-Only",
+      },
     };
 
     const config = actionConfig[type];
@@ -163,6 +179,13 @@ export const DangerZone = () => {
             });
             toast.show({ message: "Project deleted successfully" });
             history.replace("/projects");
+          } else if (type === "read_only") {
+            const endpoint = project.is_read_only ? "unsetProjectReadOnly" : "setProjectReadOnly";
+            await api.callApi(endpoint, {
+              params: { pk: project.id },
+            });
+            toast.show({ message: project.is_read_only ? "Project is now editable" : "Project is now read-only" });
+            fetchProject(project.id, true);
           }
         } catch (error) {
           toast.show({ message: `Error: ${error.message}`, type: "error" });
@@ -175,6 +198,15 @@ export const DangerZone = () => {
 
   const buttons = useMemo(
     () => [
+      ...(window.APP_SETTINGS?.user?.isStaff
+        ? [
+            {
+              type: "read_only",
+              help: "Read-only projects let annotators view annotations but prevent creating, editing, or deleting them.",
+              label: project.is_read_only ? "Make Project Editable" : "Make Project Read-Only",
+            },
+          ]
+        : []),
       {
         type: "annotations",
         disabled: true, //&& !project.total_annotations_number,

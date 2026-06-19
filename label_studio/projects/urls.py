@@ -57,6 +57,8 @@ _api_urlpatterns = [
     # Archive
     path('<int:pk>/archive/', api.ProjectArchiveAPI.as_view(), name='project-archive'),
     path('<int:pk>/unarchive/', api.ProjectUnarchiveAPI.as_view(), name='project-unarchive'),
+    path('<int:pk>/read-only/', api.ProjectSetReadOnlyAPI.as_view(), name='project-set-read-only'),
+    path('<int:pk>/editable/', api.ProjectUnsetReadOnlyAPI.as_view(), name='project-unset-read-only'),
     path('archived/', api.ProjectArchivedListAPI.as_view(), name='project-archived-list'),
 ]
 

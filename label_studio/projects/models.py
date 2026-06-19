@@ -353,6 +353,12 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         help_text='Whether the project is archived. Archived projects are only visible to admins.',
     )
 
+    is_read_only = models.BooleanField(
+        _('is read only'),
+        default=False,
+        help_text='Whether the project is read-only. Annotations cannot be created, edited, or deleted.',
+    )
+
     custom_task_lock_ttl = models.IntegerField(
         _('custom_task_lock_ttl'),
         null=True,

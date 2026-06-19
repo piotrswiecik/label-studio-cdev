@@ -1164,6 +1164,40 @@ class ProjectUnarchiveAPI(generics.GenericAPIView):
         return Response(ProjectSerializer(project).data, status=status.HTTP_200_OK)
 
 
+class ProjectSetReadOnlyAPI(generics.GenericAPIView):
+    """Mark a project as read-only. Admin only."""
+
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+    def post(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {'detail': 'Only admins can change read-only state.'}, status=status.HTTP_403_FORBIDDEN
+            )
+        project = self.get_object()
+        project.is_read_only = True
+        project.save(update_fields=['is_read_only'])
+        return Response(ProjectSerializer(project).data, status=status.HTTP_200_OK)
+
+
+class ProjectUnsetReadOnlyAPI(generics.GenericAPIView):
+    """Mark a project as editable (not read-only). Admin only."""
+
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+    def post(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {'detail': 'Only admins can change read-only state.'}, status=status.HTTP_403_FORBIDDEN
+            )
+        project = self.get_object()
+        project.is_read_only = False
+        project.save(update_fields=['is_read_only'])
+        return Response(ProjectSerializer(project).data, status=status.HTTP_200_OK)
+
+
 class ProjectArchivedListAPI(generics.ListAPIView):
     """List archived projects. Admin only."""
 

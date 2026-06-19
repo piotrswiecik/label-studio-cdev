@@ -100,4 +100,7 @@ declare type APIProject = {
 
   /** Whether the project is archived */
   is_archived?: boolean;
+
+  /** Whether the project is read-only (annotations cannot be created, edited, or deleted) */
+  is_read_only?: boolean;
 };

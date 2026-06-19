@@ -26,6 +26,8 @@ export const API_CONFIG = {
     archiveProject: "POST:/projects/:pk/archive",
     unarchiveProject: "POST:/projects/:pk/unarchive",
     archivedProjects: "/projects/archived",
+    setProjectReadOnly: "POST:/projects/:pk/read-only",
+    unsetProjectReadOnly: "POST:/projects/:pk/editable",
     clearPredictions: "POST:/projects/:pk/predictions/clear",
     projectResetCache: "POST:/projects/:pk/summary/reset",
 
