@@ -32,6 +32,9 @@ const TaskStore = types
     allow_skip: types.optional(types.maybeNull(types.boolean), true),
     image_unreadable: types.optional(types.boolean, false),
     task_completed: types.optional(types.boolean, false),
+    task_verified: types.optional(types.boolean, false),
+    // attribution for the latest verification event: {email, first_name, last_name, username, verified_at} | null
+    task_verified_by: types.optional(types.frozen(), null),
   })
   .actions((self) => ({
     setImageUnreadable(value) {
@@ -39,6 +42,12 @@ const TaskStore = types
     },
     setTaskCompleted(value) {
       self.task_completed = value;
+    },
+    setTaskVerified(value) {
+      self.task_verified = value;
+    },
+    setTaskVerifiedBy(info) {
+      self.task_verified_by = info ?? null;
     },
   }))
   .views((self) => ({

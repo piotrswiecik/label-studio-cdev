@@ -293,6 +293,8 @@ class TaskAPI(generics.RetrieveUpdateDestroyAPIView):
             'annotations',
             'predictions',
             'annotations__completed_by',
+            'verifications',
+            'verifications__user',
             'project',
             'io_storages_azureblobimportstoragelink',
             'io_storages_gcsimportstoragelink',

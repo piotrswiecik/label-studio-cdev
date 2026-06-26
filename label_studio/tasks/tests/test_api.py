@@ -1,7 +1,7 @@
 from organizations.tests.factories import OrganizationFactory
 from projects.tests.factories import ProjectFactory
 from rest_framework.test import APITestCase
-from tasks.models import Task
+from tasks.models import Task, TaskVerification
 from tasks.tests.factories import TaskFactory
 
 
@@ -52,6 +52,10 @@ class TestTaskAPI(APITestCase):
             'last_comment_updated_at': None,
             'unresolved_comment_count': 0,
             'allow_skip': True,
+            'image_unreadable': False,
+            'task_completed': False,
+            'task_verified': False,
+            'task_verified_by': None,
         }
 
     def test_patch_task(self):
@@ -95,7 +99,62 @@ class TestTaskAPI(APITestCase):
             'last_comment_updated_at': None,
             'unresolved_comment_count': 0,
             'allow_skip': True,
+            'image_unreadable': False,
+            'task_completed': False,
+            'task_verified': False,
+            'task_verified_by': None,
         }
+
+    def test_patch_task_verified_records_event_and_attribution(self):
+        task = TaskFactory(project=self.project, data={'text': 'test'})
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f'/api/tasks/{task.id}/', data={'task_verified': True}, format='json'
+        )
+        assert response.status_code == 200
+
+        task.refresh_from_db()
+        assert task.task_verified is True
+
+        events = TaskVerification.objects.filter(task=task)
+        assert events.count() == 1
+        event = events.first()
+        assert event.verified is True
+        assert event.user == self.user
+
+        verified_by = response.json()['task_verified_by']
+        assert verified_by is not None
+        assert verified_by['id'] == self.user.id
+        assert verified_by['email'] == self.user.email
+        assert verified_by['verified_at'] is not None
+
+    def test_patch_task_unverified_clears_attribution_but_keeps_log(self):
+        task = TaskFactory(project=self.project, data={'text': 'test'})
+
+        self.client.force_authenticate(user=self.user)
+        self.client.patch(f'/api/tasks/{task.id}/', data={'task_verified': True}, format='json')
+        self.client.patch(f'/api/tasks/{task.id}/', data={'task_verified': False}, format='json')
+
+        task.refresh_from_db()
+        assert task.task_verified is False
+
+        # full audit log keeps both events
+        events = list(TaskVerification.objects.filter(task=task).order_by('created_at'))
+        assert [e.verified for e in events] == [True, False]
+
+        # but the displayed attribution is gone while unverified
+        response = self.client.get(f'/api/tasks/{task.id}/')
+        assert response.json()['task_verified_by'] is None
+
+    def test_patch_task_verified_unchanged_records_no_event(self):
+        task = TaskFactory(project=self.project, data={'text': 'test'})
+
+        self.client.force_authenticate(user=self.user)
+        # patching an unrelated field should not create a verification event
+        self.client.patch(f'/api/tasks/{task.id}/', data={'task_verified': False}, format='json')
+
+        assert TaskVerification.objects.filter(task=task).count() == 0
 
     def test_create_task_without_project_id_fails(self):
         """Test that creating a task without project ID fails with appropriate error message"""

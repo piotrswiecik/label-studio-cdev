@@ -18,6 +18,7 @@ from tasks.serializers import (
     AnnotationSerializer,
     PredictionSerializer,
     TaskSerializer,
+    get_task_verified_by_data,
 )
 from users.models import User
 
@@ -460,8 +461,12 @@ class DataManagerTaskSerializer(TaskSerializer):
     draft_exists = serializers.BooleanField(required=False)
     updated_by = UpdatedByDMFieldSerializer(required=False, read_only=True)
     state = FSMStateField(read_only=True)  # FSM state - automatically uses annotation if present
+    task_verified_by = serializers.SerializerMethodField(required=False, read_only=True)
 
     CHAR_LIMITS = 500
+
+    def get_task_verified_by(self, task):
+        return get_task_verified_by_data(task)
 
     class Meta:
         model = Task

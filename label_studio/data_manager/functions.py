@@ -292,6 +292,16 @@ def get_all_columns(project, *_):
         'project_defined': False,
     })
 
+    result['columns'].append({
+        'id': 'task_verified',
+        'title': 'Zadanie zweryfikowane',
+        'type': 'Boolean',
+        'help': 'Whether this task has been marked as verified',
+        'target': 'tasks',
+        'visibility_defaults': {'explore': True, 'labeling': False},
+        'project_defined': False,
+    })
+
     result['columns'].append(data_root)
 
     return result

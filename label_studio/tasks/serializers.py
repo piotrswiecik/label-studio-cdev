@@ -23,7 +23,7 @@ from rest_framework.fields import SkipField
 from rest_framework.serializers import ModelSerializer
 from rest_framework.settings import api_settings
 from tasks.exceptions import AnnotationDuplicateError
-from tasks.models import Annotation, AnnotationDraft, Prediction, PredictionMeta, Task
+from tasks.models import Annotation, AnnotationDraft, Prediction, PredictionMeta, Task, TaskVerification
 from tasks.validation import TaskValidator
 from users.models import User
 from users.serializers import UserSerializer
@@ -196,11 +196,46 @@ class AnnotationSerializer(FlexFieldsModelSerializer):
         expandable_fields = {'completed_by': (CompletedByDMSerializer,)}
 
 
+def get_task_verified_by_data(task):
+    """Return attribution for the latest verification event, or None if the task isn't currently verified."""
+    if not task.task_verified:
+        return None
+    # use prefetched verifications when available to avoid an extra query per task
+    if 'verifications' in getattr(task, '_prefetched_objects_cache', {}):
+        event = next((v for v in task.verifications.all() if v.verified), None)
+    else:
+        event = task.verifications.filter(verified=True).order_by('-created_at').first()
+    if not event or not event.user:
+        return None
+    return {
+        'id': event.user.id,
+        'email': event.user.email,
+        'first_name': event.user.first_name,
+        'last_name': event.user.last_name,
+        'username': getattr(event.user, 'username', None),
+        'verified_at': event.created_at,
+    }
+
+
 class TaskSimpleSerializer(ModelSerializer):
+    task_verified_by = serializers.SerializerMethodField(read_only=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['annotations'] = AnnotationSerializer(many=True, default=[], context=self.context, read_only=True)
         self.fields['predictions'] = PredictionSerializer(many=True, default=[], context=self.context, read_only=True)
+
+    def get_task_verified_by(self, task):
+        return get_task_verified_by_data(task)
+
+    def update(self, instance, validated_data):
+        new_verified = validated_data.get('task_verified')
+        changed = new_verified is not None and new_verified != instance.task_verified
+        instance = super().update(instance, validated_data)
+        request = self.context.get('request')
+        if changed and request and request.user.is_authenticated:
+            TaskVerification.objects.create(task=instance, user=request.user, verified=new_verified)
+        return instance
 
     def to_representation(self, instance):
         project = instance.project

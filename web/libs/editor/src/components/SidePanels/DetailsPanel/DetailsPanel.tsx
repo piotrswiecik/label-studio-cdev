@@ -110,10 +110,23 @@ const HistoryTab: FC<any> = inject("store")(
   observer(function HistoryTab({ store, currentEntity }: any): JSX.Element {
     const showAnnotationHistory = store.hasInterface("annotations:history");
 
+    const verifiedBy = store.task?.task_verified ? store.task?.task_verified_by : null;
+    const verifiedByName = verifiedBy
+      ? [verifiedBy.first_name, verifiedBy.last_name].filter(Boolean).join(" ").trim() ||
+        verifiedBy.username ||
+        verifiedBy.email
+      : null;
+
     return (
       <>
         <div className={cn("history").toClassName()}>
           <div className={cn("history").elem("section-tab").toClassName()}>
+            {verifiedBy && (
+              <div style={{ padding: "4px 0 8px 16px", color: "#0070d2" }}>
+                Zweryfikowane przez {verifiedByName}
+                {verifiedBy.verified_at ? ` (${new Date(verifiedBy.verified_at).toLocaleString()})` : ""}
+              </div>
+            )}
             <AnnotationHistory
               inline
               enabled={showAnnotationHistory}
@@ -178,7 +191,9 @@ const ImageUnreadableFlag: FC<any> = inject("store")(
         body: JSON.stringify({ [field]: value }),
       });
 
-      return res.ok;
+      if (!res.ok) return null;
+
+      return res.json().catch(() => ({}));
     };
 
     return (
@@ -208,6 +223,20 @@ const ImageUnreadableFlag: FC<any> = inject("store")(
 
               if (await patchTask("task_completed", newValue)) {
                 store.task.setTaskCompleted(newValue);
+              }
+            }}
+          />
+          <TaskFlagCheckbox
+            label="Zadanie zweryfikowane"
+            checked={store.task.task_verified}
+            activeColor="#0070d2"
+            onChange={async (e) => {
+              const newValue = e.target.checked;
+              const data = await patchTask("task_verified", newValue);
+
+              if (data) {
+                store.task.setTaskVerified(newValue);
+                store.task.setTaskVerifiedBy(data.task_verified_by ?? null);
               }
             }}
           />

@@ -113,6 +113,11 @@ class Task(TaskMixin, FsmHistoryStateModel):
         default=False,
         help_text='Whether this task has been marked as completed by the annotator.',
     )
+    task_verified = models.BooleanField(
+        _('task_verified'),
+        default=False,
+        help_text='Whether this task has been marked as verified.',
+    )
     overlap = models.IntegerField(
         _('overlap'),
         default=1,
@@ -580,6 +585,29 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
 pre_bulk_create = Signal()   # providing args 'objs' and 'batch_size'
 post_bulk_create = Signal()   # providing args 'objs' and 'batch_size'
+
+
+class TaskVerification(models.Model):
+    """Audit log of task verification toggles (Zadanie zweryfikowane)."""
+
+    task = models.ForeignKey(
+        Task,
+        related_name='verifications',
+        on_delete=models.CASCADE,
+        help_text='Task this verification event belongs to',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='task_verifications',
+        on_delete=models.SET_NULL,
+        null=True,
+        help_text='User who toggled the verification flag',
+    )
+    verified = models.BooleanField(help_text='True = marked verified, False = unmarked')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
 
 class AnnotationQuerySet(models.QuerySet):
